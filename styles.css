@@ -1174,46 +1174,148 @@ body { background: #FAFAFA; }
 }
 
 /* =====================================================================
-   EDI Central Tracking — Operations (vendor ops prototype)
+   EDI Central Tracking — “Commercial control” layout (vendor ops prototype)
    ===================================================================== */
-.summary-cards.summary-cards--ops {
+.commercial-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.commercial-page__head {
+  display: flex;
+  align-items: center;
+  gap: var(--hexa-space-sm);
+  margin-bottom: var(--hexa-space-md);
+}
+.commercial-page__title {
+  margin: 0;
+}
+.commercial-breadcrumb__link {
+  color: inherit;
+  text-decoration: none;
+}
+.commercial-breadcrumb__link:hover {
+  text-decoration: underline;
+}
+.commercial-breadcrumb__sep {
+  margin: 0 0.35em;
+  opacity: 0.65;
+}
+.commercial-toolbar {
+  display: flex;
+  gap: var(--hexa-space-lg);
+  margin-bottom: var(--hexa-space-xl);
+  flex-wrap: wrap;
+}
+.commercial-toolbar__field {
+  min-width: 200px;
+  flex: 0 1 280px;
+  margin-bottom: 0;
+}
+
+.summary-cards.summary-cards--commercial {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 @media (max-width: 1100px) {
-  .summary-cards.summary-cards--ops { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .summary-cards.summary-cards--commercial { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 420px) {
-  .summary-cards.summary-cards--ops { grid-template-columns: 1fr; }
+  .summary-cards.summary-cards--commercial { grid-template-columns: 1fr; }
 }
-.summary-card--ops.is-clickable { cursor: pointer; }
-.summary-card--ops.is-clickable:hover {
+.summary-card--commercial.is-clickable { cursor: pointer; }
+.summary-card--commercial.is-clickable:hover {
   border-color: #111111;
   box-shadow: 0 0 0 1px #111111;
 }
 
-.order-table .order-list {
-  min-width: 1480px;
+.commercial-page .order-table .order-list {
+  min-width: 960px;
 }
-.order-row--ops {
+.order-row--cc {
   grid-template-columns:
     32px
-    200px
-    160px
-    100px
-    minmax(180px, 1.2fr)
-    minmax(100px, 0.8fr)
-    120px
-    150px
-    52px
-    100px
-    minmax(120px, 1fr)
-    128px;
+    minmax(168px, 200px)
+    minmax(200px, 1.45fr)
+    minmax(160px, 1fr)
+    minmax(96px, 0.75fr)
+    108px
+    140px;
+  align-items: center;
+  padding-top: var(--hexa-space-lg);
+  padding-bottom: var(--hexa-space-lg);
 }
-.order-row--ops .cell-status {
+.order-row--cc .cell-status {
   display: flex;
   align-items: center;
   gap: 6px;
 }
+.order-row--cc .cell-cc-store,
+.order-row--cc .cell-cc-orders {
+  white-space: normal;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  line-height: 1.35;
+}
+.cc-store-chain {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--hexa-fg-neutral-tertiary);
+  font-weight: 600;
+}
+.cc-store-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--hexa-fg-neutral-primary);
+}
+.cc-store-id {
+  font-size: 13px;
+  color: var(--hexa-fg-neutral-secondary);
+}
+.cc-store-vendor {
+  font-size: 12px;
+  color: var(--hexa-fg-neutral-tertiary);
+}
+.order-row--cc .cell-val {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.row-actions--cc {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  justify-content: flex-end;
+}
+.row-action--sm {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  min-width: 32px;
+}
+.cc-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-left: 2px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: var(--hexa-radius-sm);
+  color: var(--hexa-fg-neutral-tertiary);
+  cursor: pointer;
+}
+.cc-chevron:hover {
+  background: #f0f0f0;
+  color: var(--hexa-fg-neutral-primary);
+}
+.cc-chevron hexa-icon {
+  width: 20px;
+  height: 20px;
+}
+
 .sla-urgent {
   display: inline-flex;
   color: #D32F2F;

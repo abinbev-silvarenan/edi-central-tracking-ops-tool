@@ -62,11 +62,50 @@
 
   <main class="app-shell">
 
-    <!-- ORDERS SCREEN ============================================ -->
+    <!-- ORDERS SCREEN — information structure inspired by BEES one “Commercial control” -->
     <section id="orders" data-screen>
-      <h1 class="page-title">EDI Central Tracking — Operations</h1>
-      <p class="text-body-sm text-fg-neutral-secondary mb-lg">Internal vendor operations view · 90-day window · Dense triage layout (HLR draft 0.1)</p>
+      <div class="commercial-page">
+        <nav class="commercial-breadcrumb text-body-sm text-fg-neutral-secondary mb-sm" aria-label="Breadcrumb">
+          <a href="#orders" class="commercial-breadcrumb__link" data-track="bc-home">Home</a>
+          <span class="commercial-breadcrumb__sep" aria-hidden="true">/</span>
+          <span class="commercial-breadcrumb__current">EDI order control</span>
+        </nav>
 
+        <div class="commercial-page__head">
+          <button type="button" class="commercial-back hexa-icon-btn" aria-label="Back" data-track="cta-page-back" onclick="if (history.length > 1) history.back()">
+            <hexa-icon name="ChevronLeftIcon"></hexa-icon>
+          </button>
+          <h1 class="page-title commercial-page__title">EDI order control</h1>
+        </div>
+
+        <div class="page-tabs commercial-page__tabs" role="tablist" aria-label="Order views">
+          <button type="button" class="page-tab" role="tab" id="tabOrdersOverview" aria-selected="false" data-track="tab-cc-overview" onclick="setOrdersTab('overview')">Overview</button>
+          <button type="button" class="page-tab" role="tab" id="tabOrdersQueue" aria-selected="true" data-track="tab-cc-queue" onclick="setOrdersTab('queue')">Order queue</button>
+          <button type="button" class="page-tab" role="tab" id="tabOrdersHistory" aria-selected="false" data-track="tab-cc-history" onclick="setOrdersTab('history')">Order history</button>
+        </div>
+
+        <div class="commercial-toolbar">
+          <label class="hexa-field commercial-toolbar__field">
+            <span class="hexa-label">All stores</span>
+            <select class="hexa-select" id="toolbarPocSelect" data-track="toolbar-poc" onchange="onToolbarPocChange(this.value)"></select>
+          </label>
+          <label class="hexa-field commercial-toolbar__field">
+            <span class="hexa-label">Status</span>
+            <select class="hexa-select" id="toolbarStatusSelect" data-track="toolbar-status" onchange="onToolbarStatusChange(this.value)"></select>
+          </label>
+        </div>
+
+        <div class="summary-cards summary-cards--commercial" id="summaryCards" role="region" aria-label="Pipeline summary"></div>
+
+        <div id="ordersOverviewPane" class="orders-pane orders-pane--overview" hidden>
+          <p class="text-body-md text-fg-neutral-secondary mb-md">High-level view of the EDI pipeline. The cards above reflect the same period as the order queue. Open the queue for advanced filters, bulk reprocess, and per-line diagnostics.</p>
+          <div class="flex gap-sm flex-wrap">
+            <button type="button" class="hexa-btn hexa-btn--primary" data-track="overview-to-queue" onclick="setOrdersTab('queue')">Open order queue</button>
+            <a href="#health" class="hexa-btn hexa-btn--secondary" data-track="overview-to-health">Operational health</a>
+          </div>
+        </div>
+
+        <div id="ordersQueuePane" class="orders-pane orders-pane--queue">
       <!-- Filter (collapsed by default) -->
       <div class="filter-block">
         <button type="button" class="filter-toggle" id="filterToggle" data-track="cta-toggle-filters" onclick="toggleFilterPanel()" aria-expanded="false">
@@ -174,9 +213,6 @@
         </form>
       </div>
 
-      <!-- Overview KPI cards -->
-      <div class="summary-cards summary-cards--ops" id="summaryCards" role="region" aria-label="Order summary"></div>
-
       <!-- Active filter chips -->
       <div class="result-bar" id="resultBar" hidden>
         <div class="chip-row" id="activeFilters"></div>
@@ -214,6 +250,8 @@
           <button class="hexa-btn hexa-btn--secondary" data-track="cta-empty-clear" onclick="clearFilters()">Clear all filters</button>
         </div>
       </template>
+        </div><!-- /.ordersQueuePane -->
+      </div><!-- /.commercial-page -->
     </section>
 
     <!-- ITEM-LEVEL SCREEN ====================================== -->
@@ -453,6 +491,7 @@
     pendingBulkIds: null,
     noteTargetId: null,
     notifyTargetId: null,
+    ordersTab: 'queue',
   };
 
   // Order statuses that can be bulk-reprocessed (and therefore get a checkbox).
@@ -551,6 +590,131 @@
   renderRulePanel();
   renderRegionPanel();
   renderRepPanel();
+  populateToolbarSelects();
+
+  function setOrdersTab(tab) {
+    view.ordersTab = tab;
+    const pairs = [['tabOrdersOverview', 'overview'], ['tabOrdersQueue', 'queue'], ['tabOrdersHistory', 'history']];
+    pairs.forEach(([id, t]) => {
+      const el = document.getElementById(id);
+      if (el) el.setAttribute('aria-selected', String(t === tab));
+    });
+    const overview = document.getElementById('ordersOverviewPane');
+    const queue = document.getElementById('ordersQueuePane');
+    if (overview && queue) {
+      overview.hidden = tab !== 'overview';
+      queue.hidden = tab === 'overview';
+    }
+    if (tab === 'history') {
+      const today = new Date();
+      const from = new Date(today.getTime() - 89 * 86400000);
+      const toEl = document.getElementById('dateTo');
+      const fromEl = document.getElementById('dateFrom');
+      if (toEl && fromEl) {
+        toEl.value = isoDay(today);
+        fromEl.value = isoDay(from);
+        applied.dateFrom = fromEl.value;
+        applied.dateTo = toEl.value;
+        enforcePeriodCap();
+      }
+    }
+    HT.track('commercial_tab_changed', { tab });
+    renderTable();
+  }
+
+  function toolbarStatusValueFromApplied() {
+    if (!applied.statuses.size) return '';
+    const arr = [...applied.statuses].sort();
+    const key = arr.join(',');
+    if (key === 'PROCESSING,WAITING' || key === 'WAITING,PROCESSING') return '__PIPE__';
+    if (arr.length === 3 && arr.includes('ALERTS') && arr.includes('BLOCKED') && arr.includes('REJECTED')) return '__NEED__';
+    if (arr.length === 1) return arr[0];
+    return '';
+  }
+
+  function syncToolbarFromApplied() {
+    const pocSel = document.getElementById('toolbarPocSelect');
+    const stSel = document.getElementById('toolbarStatusSelect');
+    if (pocSel) {
+      if (!applied.pocs.size) pocSel.value = '';
+      else if (applied.pocs.size === 1) pocSel.value = [...applied.pocs][0];
+      else pocSel.value = '';
+    }
+    if (stSel) {
+      const v = toolbarStatusValueFromApplied();
+      stSel.value = v;
+      if (v && !Array.from(stSel.options).some((o) => o.value === v)) stSel.value = '';
+    }
+  }
+
+  function populateToolbarSelects() {
+    const pocSel = document.getElementById('toolbarPocSelect');
+    if (!pocSel) return;
+    pocSel.innerHTML = '<option value="">All stores</option>' + D.POCS.map((p) => `<option value="${p.id}">${p.name}</option>`).join('');
+    const stSel = document.getElementById('toolbarStatusSelect');
+    if (!stSel) return;
+    stSel.innerHTML = `
+      <option value="">All statuses</option>
+      <option value="__PIPE__">Processing</option>
+      <option value="__NEED__">Needs attention</option>
+      <option value="ACCEPTED">Accepted</option>
+      <option value="ALERTS">Accepted with alerts</option>
+      <option value="BLOCKED">Blocked</option>
+      <option value="REJECTED">Rejected</option>
+      <option value="WAITING">Waiting process</option>
+      <option value="PROCESSING">Processing (in flight)</option>`;
+    syncToolbarFromApplied();
+  }
+
+  function onToolbarPocChange(val) {
+    draft.pocs.clear();
+    applied.pocs.clear();
+    if (val) {
+      draft.pocs.add(val);
+      applied.pocs.add(val);
+    }
+    renderPocPanel('');
+    syncDropdownLabels();
+    markDirty();
+    view.page = 1;
+    renderTable();
+    HT.track('toolbar_poc', { all: !val });
+  }
+
+  function onToolbarStatusChange(val) {
+    draft.statuses.clear();
+    applied.statuses.clear();
+    if (val === '__PIPE__') {
+      draft.statuses.add('WAITING');
+      draft.statuses.add('PROCESSING');
+      applied.statuses.add('WAITING');
+      applied.statuses.add('PROCESSING');
+    } else if (val === '__NEED__') {
+      ['BLOCKED', 'REJECTED', 'ALERTS'].forEach((s) => { draft.statuses.add(s); applied.statuses.add(s); });
+    } else if (val) {
+      draft.statuses.add(val);
+      applied.statuses.add(val);
+    }
+    renderStatusPanel();
+    syncDropdownLabels();
+    markDirty();
+    view.page = 1;
+    renderTable();
+    HT.track('toolbar_status', { bucket: val || 'all' });
+  }
+
+  function toggleCcSummary(filterIds, cardId) {
+    const same = filterIds.length === applied.statuses.size && filterIds.every((id) => applied.statuses.has(id));
+    applied.statuses = new Set(same ? [] : filterIds);
+    draft.statuses = new Set(applied.statuses);
+    renderStatusPanel();
+    syncDropdownLabels();
+    markDirty();
+    syncToolbarFromApplied();
+    view.page = 1;
+    HT.track('cc_summary_filter', { card: cardId, on: !same });
+    renderTable();
+  }
 
   function toggleDraft(key, value, on) {
     if (on) draft[key].add(value); else draft[key].delete(value);
@@ -697,6 +861,7 @@
       has_po: !!applied.poQuery,
       days: Math.round((new Date(applied.dateTo) - new Date(applied.dateFrom)) / 86400000) + 1,
     });
+    syncToolbarFromApplied();
     renderTable();
   }
 
@@ -728,8 +893,8 @@
     syncDropdownLabels();
     markDirty();
     view.page = 1;
+    syncToolbarFromApplied();
     renderTable();
-    HT.track('filters_cleared');
   }
 
   // ============================================================
@@ -813,6 +978,8 @@
       chips.push(`<span class="hexa-chip" style="cursor:default">${applied.pocs.size} POC${applied.pocs.size > 1 ? 's' : ''} selected</span>`);
     }
     root.innerHTML = chips.join('');
+    const bar = document.getElementById('resultBar');
+    if (bar) bar.hidden = chips.length === 0;
   }
 
   // ============================================================
@@ -840,78 +1007,57 @@
   }
 
   // ============================================================
-  // SUMMARY KPI CARDS — operational triage (HLR FR-4 subset)
+  // SUMMARY KPI CARDS — BEES one “Commercial control” pattern (3 + Filter)
   // ============================================================
   function renderSummary() {
     const orders = filteredOrders({ ignoreStatus: true });
     const total = orders.length || 1;
-    let blocked = 0; let blockedUrgent = 0; let rejected = 0; let alerts = 0; let accepted = 0; let pending = 0;
-    let blockedHoursSum = 0; let blockedHoursN = 0;
+    let processing = 0;
+    let attention = 0;
+    let cleared = 0;
     for (const o of orders) {
-      if (o.statusId === 'BLOCKED') {
-        blocked++;
-        if (o.slaUrgent) blockedUrgent++;
-        if (o.hoursInBlocked != null) { blockedHoursSum += o.hoursInBlocked; blockedHoursN++; }
-      } else if (o.statusId === 'REJECTED') rejected++;
-      else if (o.statusId === 'ALERTS') alerts++;
-      else if (o.statusId === 'ACCEPTED') accepted++;
-      else pending++;
+      if (o.statusId === 'WAITING' || o.statusId === 'PROCESSING') processing++;
+      else if (o.statusId === 'BLOCKED' || o.statusId === 'REJECTED' || o.statusId === 'ALERTS') attention++;
+      else if (o.statusId === 'ACCEPTED') cleared++;
     }
-    const acceptRate = total ? Math.round(((accepted + alerts) / total) * 100) : 0;
-    const avgBlockedH = blockedHoursN ? Math.round(blockedHoursSum / blockedHoursN) : 0;
-
     const cards = [
-      { id: 'TOTAL', label: 'Orders in period', tone: 'info', sub: `${total.toLocaleString()} total`, filter: null },
-      { id: 'SLA', label: 'Blocked — SLA urgent', tone: 'error', sub: `${blockedUrgent} < 12h to deadline`, filter: 'SLA' },
-      { id: 'BLOCKED', label: 'Blocked (all)', tone: 'blocked', sub: `${blocked} on hold`, filter: 'BLOCKED' },
-      { id: 'REJECTED', label: 'Rejected', tone: 'error', sub: `${rejected} failed`, filter: 'REJECTED' },
-      { id: 'RATE', label: 'Acceptance rate', tone: 'success', sub: `${acceptRate}% accepted + alerts`, filter: 'RATE' },
-      { id: 'AVG', label: 'Avg time in blocked', tone: 'info', sub: `${avgBlockedH}h (mock)`, filter: null },
+      { id: 'PROC', label: 'Processing', tone: 'info', count: processing, filterIds: ['WAITING', 'PROCESSING'] },
+      { id: 'ATTN', label: 'Needs attention', tone: 'warning', count: attention, filterIds: ['BLOCKED', 'REJECTED', 'ALERTS'] },
+      { id: 'CLR', label: 'Accepted', tone: 'success', count: cleared, filterIds: ['ACCEPTED'] },
     ];
-    document.getElementById('summaryCards').innerHTML = cards.map((c) => `
-      <div class="summary-card summary-card--ops ${c.filter ? 'is-clickable' : ''}" data-track="ops-summary-${c.id.toLowerCase()}"
-           ${c.filter ? `onclick="applyOpsSummaryCard('${c.filter}')"` : ''} title="${c.label}">
-        <div class="header-row">
-          <span class="label">
-            <span class="dot dot-${c.tone}"></span>
-            <span class="label-text">${c.label}</span>
-          </span>
-        </div>
-        <div class="value-row">
-          <span class="pct" style="font-size:22px">${c.sub}</span>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  function applyOpsSummaryCard(kind) {
-    applied.statuses.clear();
-    draft.statuses.clear();
-    if (kind === 'BLOCKED' || kind === 'SLA') {
-      applied.statuses.add('BLOCKED');
-      draft.statuses.add('BLOCKED');
-    } else if (kind === 'REJECTED') {
-      applied.statuses.add('REJECTED');
-      draft.statuses.add('REJECTED');
-    } else if (kind === 'RATE') {
-      applied.statuses.add('ACCEPTED');
-      applied.statuses.add('ALERTS');
-      draft.statuses.add('ACCEPTED');
-      draft.statuses.add('ALERTS');
-    }
-    renderStatusPanel();
-    syncDropdownLabels();
-    markDirty();
-    view.page = 1;
-    HT.track('ops_summary_card_applied', { kind });
-    renderTable();
+    document.getElementById('summaryCards').innerHTML = cards.map((c) => {
+      const pct = total ? Math.round((c.count / total) * 100) : 0;
+      const isActive = c.filterIds.length === applied.statuses.size && c.filterIds.every((id) => applied.statuses.has(id));
+      return `
+        <div class="summary-card summary-card--commercial" data-track="cc-summary-${c.id.toLowerCase()}">
+          <div class="header-row">
+            <span class="label">
+              <span class="dot dot-${c.tone}"></span>
+              <span class="label-text">${c.label}</span>
+            </span>
+            <button type="button" class="filter-link ${isActive ? 'is-active' : ''}"
+              data-track="cc-summary-filter-${c.id.toLowerCase()}"
+              onclick='toggleCcSummary(${JSON.stringify(c.filterIds)}, "${c.id}")'>
+              ${isActive ? 'Clear' : 'Filter'}
+            </button>
+          </div>
+          <div class="value-row">
+            <span class="pct">${pct}%</span>
+            <span class="of">(${c.count.toLocaleString()} of ${total.toLocaleString()})</span>
+          </div>
+        </div>`;
+    }).join('');
   }
 
   function renderTable() {
     renderActiveFilterChips();
     renderSummary();
-    const orders = filteredOrders();
+    syncToolbarFromApplied();
     const wrap = document.getElementById('tableWrap');
+    if (view.ordersTab === 'overview') {
+      if (wrap) wrap.innerHTML = '';
+      return;
+    }
     if (!orders.length) {
       wrap.innerHTML = '';
       const tpl = document.getElementById('emptyTpl');
@@ -927,10 +1073,8 @@
     const end = Math.min(start + pageSize, total);
     const pageOrders = orders.slice(start, end);
 
-    // Column order is optimised for the user's scan-then-act flow:
-    //   [select] → Status → Receive date → Account → Vendor → PO# → [actions]
-    // Clicking the row body navigates to the Item-level page; the inline
-    // Summary and Reprocess buttons cover the secondary in-place actions.
+    // Column order matches BEES one “Commercial control” list pattern:
+    //   [select] → Status → Store (chain, POC, id, vendor) → Order numbers → Rule → Total → [actions + chevron]
     const rows = pageOrders.map((o) => {
       const selectable = isReprocessable(o);
       const checked = view.selected.has(o.id);
@@ -943,20 +1087,20 @@
         : `<span class="cell-select cell-select--disabled" title="${o.statusLabel} orders can't be reprocessed"></span>`;
 
       const reprocessBtn = selectable
-        ? `<button type="button" class="row-action row-action--primary"
+        ? `<button type="button" class="row-action row-action--primary row-action--sm"
                  data-track="row-reprocess-${o.statusId.toLowerCase()}"
                  onclick="event.stopPropagation();reprocessOrder('${o.id}')"
-                 title="Reprocess this order">
+                 title="Reprocess">
              <hexa-icon name="SyncIcon"></hexa-icon>
            </button>`
         : '';
 
-      const beesCell = o.beesOrderNumber
-        ? o.beesOrderNumber
-        : '<span class="muted">Not yet assigned</span>';
+      const beesLine = o.beesOrderNumber
+        ? `<span class="mono">BEES ${o.beesOrderNumber}</span>`
+        : '<span class="mono muted">BEES not assigned</span>';
 
       return `
-        <div class="order-row order-row--ops ${selectable ? 'is-selectable' : ''} ${checked ? 'is-selected' : ''}"
+        <div class="order-row order-row--cc ${selectable ? 'is-selectable' : ''} ${checked ? 'is-selected' : ''}"
              data-id="${o.id}"
              onclick="openItemPage('${o.id}')"
              data-track="row-open-items"
@@ -964,31 +1108,34 @@
              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openItemPage('${o.id}')}">
           ${checkboxCell}
           <div class="cell cell-status">${statusPillCell(o)}</div>
-          <div class="cell cell-date">${fmtDate(o.receivedAt)}</div>
-          <div class="cell cell-chain">${o.retailerChain}</div>
-          <div class="cell cell-account">
-            <span class="cell-account-name">${o.pocName}</span>
-            <span class="cell-account-id">${o.pocId}</span>
+          <div class="cell cell-cc-store">
+            <span class="cc-store-chain">${o.retailerChain}</span>
+            <span class="cc-store-name">${o.pocName}</span>
+            <span class="cc-store-id mono">${o.pocId}</span>
+            <span class="cc-store-vendor">${o.vendorName}</span>
           </div>
-          <div class="cell cell-vendor">${o.vendorName}</div>
-          <div class="cell cell-po mono">${o.poNumber}</div>
-          <div class="cell cell-bees mono">${beesCell}</div>
-          <div class="cell cell-num">${o.itemCount}</div>
+          <div class="cell cell-cc-orders">
+            <span class="mono">PO ${o.poNumber}</span>
+            ${beesLine}
+          </div>
+          <div class="cell cell-cc-rule">${o.primaryRuleCategory ? o.primaryRuleCategory : '—'}</div>
           <div class="cell cell-val">${fmtMoney(o.totalValue)}</div>
-          <div class="cell cell-rule">${o.primaryRuleCategory || '—'}</div>
-          <div class="row-actions row-actions--wide" onclick="event.stopPropagation()">
-            <button type="button" class="row-action"
+          <div class="row-actions row-actions--cc" onclick="event.stopPropagation()">
+            <button type="button" class="row-action row-action--sm"
                     data-track="row-summary"
                     onclick="event.stopPropagation();openDrawer('${o.id}')"
-                    title="View order summary">
+                    title="Summary">
               <hexa-icon name="InfoIcon"></hexa-icon>
             </button>
             ${reprocessBtn}
-            <button type="button" class="row-action"
+            <button type="button" class="row-action row-action--sm"
                     data-track="row-add-note"
                     onclick="event.stopPropagation();openNoteDialog('${o.id}')"
-                    title="Add resolution note">
+                    title="Add note">
               <hexa-icon name="EditIcon"></hexa-icon>
+            </button>
+            <button type="button" class="cc-chevron" tabindex="-1" data-track="row-chevron" title="View details" onclick="event.stopPropagation();openItemPage('${o.id}')">
+              <hexa-icon name="ChevronRightIcon"></hexa-icon>
             </button>
           </div>
         </div>
@@ -996,19 +1143,14 @@
     }).join('');
 
     const headerRow = `
-      <div class="order-row order-row--head order-row--ops" role="row">
+      <div class="order-row order-row--head order-row--cc" role="row">
         <div class="cell-select cell-select--head" aria-hidden="true"></div>
         <div class="cell cell-status">Status</div>
-        <div class="cell cell-date">Receive date</div>
-        <div class="cell cell-chain">Chain</div>
-        <div class="cell cell-account">Account / POC</div>
-        <div class="cell cell-vendor">Vendor</div>
-        <div class="cell cell-po">PO number</div>
-        <div class="cell cell-bees">BEES order #</div>
-        <div class="cell cell-num">Items</div>
-        <div class="cell cell-val">Order value</div>
-        <div class="cell cell-rule">Primary rule</div>
-        <div class="row-actions row-actions--wide"></div>
+        <div class="cell cell-cc-store">Store</div>
+        <div class="cell cell-cc-orders">Order numbers</div>
+        <div class="cell cell-cc-rule">Rule</div>
+        <div class="cell cell-val">Order total</div>
+        <div class="row-actions row-actions--cc"></div>
       </div>
     `;
 
