@@ -17,82 +17,149 @@
 </head>
 <body>
 
-  <!-- BEES one shell: icon rail + compact header (Commercial control reference) -->
+  <!-- BEES one shell: icon rail + compact header (Link admin reference) -->
   <div class="bees-one-app" data-track="layout-bees-one">
     <aside class="bees-one-rail" aria-label="Module navigation">
+      <button type="button" class="bees-one-rail__toggle" data-track="rail-collapse" title="Expand menu" onclick="event.preventDefault()">
+        <hexa-icon name="ChevronRightIcon"></hexa-icon>
+      </button>
       <div class="bees-one-rail__stack">
-        <a href="#orders" class="bees-one-rail__link" data-track="rail-home" title="Home">
+        <a href="#home" class="bees-one-rail__link" id="railNavHome" data-track="rail-home" title="Home">
           <hexa-icon name="HomeIcon"></hexa-icon>
         </a>
+        <a href="#orders" class="bees-one-rail__link" id="railNavEdi" data-track="rail-commercial" title="Commercial control">
+          <hexa-icon name="ClipboardIcon"></hexa-icon>
+        </a>
         <a href="#" class="bees-one-rail__link" data-track="rail-catalog" title="Catalog" onclick="event.preventDefault()">
-          <hexa-icon name="GridIcon"></hexa-icon>
+          <hexa-icon name="AppGridIcon"></hexa-icon>
         </a>
-        <a href="#orders" class="bees-one-rail__link" id="railNavEdi" data-track="rail-commercial" title="Commercial · EDI order control">
-          <hexa-icon name="UserFocusIcon"></hexa-icon>
+        <a href="#" class="bees-one-rail__link" data-track="rail-customers" title="Customer list" onclick="event.preventDefault()">
+          <hexa-icon name="UsersIcon"></hexa-icon>
         </a>
-        <a href="#" class="bees-one-rail__link" data-track="rail-deliveries" title="Deliveries" onclick="event.preventDefault()">
-          <hexa-icon name="TruckIcon"></hexa-icon>
+        <a href="#" class="bees-one-rail__link" data-track="rail-agreements" title="Commercial agreements" onclick="event.preventDefault()">
+          <hexa-icon name="CalendarIcon"></hexa-icon>
         </a>
-        <a href="#" class="bees-one-rail__link" data-track="rail-accounts" title="Accounts" onclick="event.preventDefault()">
+        <a href="#" class="bees-one-rail__link" data-track="rail-chains" title="Chain management" onclick="event.preventDefault()">
           <hexa-icon name="BuildingIcon"></hexa-icon>
         </a>
-        <a href="#health" class="bees-one-rail__link" id="railNavHealth" data-track="rail-health" title="Insights">
-          <hexa-icon name="BarChartIcon"></hexa-icon>
+        <a href="#" class="bees-one-rail__link" data-track="rail-offers" title="Offers" onclick="event.preventDefault()">
+          <hexa-icon name="TagIcon"></hexa-icon>
+        </a>
+        <a href="#" class="bees-one-rail__link" data-track="rail-campaigns" title="Campaigns" onclick="event.preventDefault()">
+          <hexa-icon name="MegaphoneIcon"></hexa-icon>
         </a>
       </div>
       <div class="bees-one-rail__spacer" aria-hidden="true"></div>
       <div class="bees-one-rail__bottom">
-        <a href="#" class="bees-one-rail__link" data-track="rail-settings" title="Settings" onclick="event.preventDefault()">
-          <hexa-icon name="UserSettingsIcon"></hexa-icon>
-        </a>
+        <button type="button" class="bees-one-rail__link" data-track="rail-back" title="Back" onclick="if(history.length>1)history.back()">
+          <hexa-icon name="ArrowLeftIcon"></hexa-icon>
+        </button>
       </div>
     </aside>
 
     <div class="bees-one-main-col">
       <header class="bees-topbar bees-topbar--one">
         <div class="bees-topbar-inner">
-          <button type="button" class="bees-toolbar-btn" aria-label="Tools menu" data-track="topbar-tools" aria-haspopup="true">
-            <hexa-icon name="MenuIcon"></hexa-icon>
-          </button>
-          <a class="bees-one-brand" href="#orders" aria-label="BEES one home" data-track="nav-logo">
-            <span class="bees-one-brand__mark">
-              <img src="_shared/img/bees-logo.png" alt="" width="80" height="26" />
+          <a class="bees-one-brand" href="#home" aria-label="BEES one home" data-track="nav-logo">
+            <span class="bees-one-brand__bars" aria-hidden="true">
+              <span></span><span></span><span></span><span></span>
             </span>
             <span class="bees-one-brand__product">one</span>
           </a>
+          <button type="button" class="bees-one-module-pill" data-track="topbar-module" aria-label="Module selector">
+            <span class="bees-one-module-pill__icon" aria-hidden="true">
+              <hexa-icon name="GlobeIcon"></hexa-icon>
+            </span>
+            <hexa-icon name="ChevronDownIcon" class="bees-one-module-pill__caret"></hexa-icon>
+          </button>
           <span class="bees-topbar-spacer" aria-hidden="true"></span>
           <button type="button" class="bees-toolbar-btn" aria-label="Notifications" data-track="topbar-notifications">
             <hexa-icon name="BellIcon"></hexa-icon>
           </button>
           <button type="button" class="bees-user-chip" aria-label="User menu" data-track="topbar-user">
-            <span class="bees-user-chip__avatar" aria-hidden="true">V</span>
-            <hexa-icon name="ChevronDownIcon"></hexa-icon>
+            <span class="bees-user-chip__avatar" aria-hidden="true">HX</span>
           </button>
         </div>
       </header>
 
   <main class="app-shell">
 
+    <!-- LANDING PAGE - "Link admin" module hub -->
+    <section id="home" data-screen>
+      <div class="commercial-page link-admin-page">
+        <h1 class="link-admin-title">Link admin</h1>
+        <p class="link-admin-subtitle">Access and manage the team's plans and customer information.</p>
+        <div class="link-admin-cards">
+          <a href="#orders" class="link-admin-card" data-track="landing-commercial-control">
+            <span class="link-admin-card__icon"><hexa-icon name="ClipboardIcon"></hexa-icon></span>
+            <div class="link-admin-card__body">
+              <span class="link-admin-card__title">Commercial control</span>
+              <span class="link-admin-card__desc">Track priority information from chains and stores.</span>
+            </div>
+          </a>
+          <a href="#" class="link-admin-card" data-track="landing-chain-mgmt" onclick="event.preventDefault()">
+            <span class="link-admin-card__icon"><hexa-icon name="GlobeIcon"></hexa-icon></span>
+            <div class="link-admin-card__body">
+              <span class="link-admin-card__title">Chain management</span>
+              <span class="link-admin-card__desc">Add or remove POCs from chains.</span>
+            </div>
+          </a>
+          <a href="#" class="link-admin-card" data-track="landing-customer-list" onclick="event.preventDefault()">
+            <span class="link-admin-card__icon"><hexa-icon name="UsersIcon"></hexa-icon></span>
+            <div class="link-admin-card__body">
+              <span class="link-admin-card__title">Customer list</span>
+              <span class="link-admin-card__desc">Manage KAMs or BDRs customers catalog.</span>
+            </div>
+          </a>
+          <a href="#" class="link-admin-card" data-track="landing-agreements" onclick="event.preventDefault()">
+            <span class="link-admin-card__icon"><hexa-icon name="DocumentCheckIcon"></hexa-icon></span>
+            <div class="link-admin-card__body">
+              <span class="link-admin-card__title">Commercial agreements</span>
+              <span class="link-admin-card__desc">Manage and track customers JBP contracts.</span>
+            </div>
+          </a>
+          <a href="#" class="link-admin-card" data-track="landing-campaigns" onclick="event.preventDefault()">
+            <span class="link-admin-card__icon"><hexa-icon name="MegaphoneIcon"></hexa-icon></span>
+            <div class="link-admin-card__body">
+              <span class="link-admin-card__title">Campaigns</span>
+              <span class="link-admin-card__desc">Manage and track campaigns.</span>
+            </div>
+          </a>
+          <a href="#" class="link-admin-card" data-track="landing-offers" onclick="event.preventDefault()">
+            <span class="link-admin-card__icon"><hexa-icon name="TagIcon"></hexa-icon></span>
+            <div class="link-admin-card__body">
+              <span class="link-admin-card__title">Offers</span>
+              <span class="link-admin-card__desc">Create and manage offers.</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
     <!-- ORDERS SCREEN — information structure inspired by BEES one “Commercial control” -->
-    <section id="orders" data-screen>
+    <section id="orders" data-screen hidden>
       <div class="commercial-page">
         <nav class="commercial-breadcrumb text-body-sm text-fg-neutral-secondary mb-sm" aria-label="Breadcrumb">
-          <a href="#orders" class="commercial-breadcrumb__link" data-track="bc-home">Home</a>
+          <a href="#home" class="commercial-breadcrumb__link" data-track="bc-home"><hexa-icon name="HomeIcon"></hexa-icon></a>
+          <span class="commercial-breadcrumb__sep" aria-hidden="true">/</span>
+          <a href="#home" class="commercial-breadcrumb__link" data-track="bc-link-admin">Commercial control</a>
+          <span class="commercial-breadcrumb__sep" aria-hidden="true">/</span>
+          <a href="#home" class="commercial-breadcrumb__link" data-track="bc-link-admin">Commercial control</a>
           <span class="commercial-breadcrumb__sep" aria-hidden="true">/</span>
           <span class="commercial-breadcrumb__current">EDI order control</span>
         </nav>
 
         <div class="commercial-page__head">
-          <button type="button" class="commercial-back hexa-icon-btn" aria-label="Back" data-track="cta-page-back" onclick="if (history.length > 1) history.back()">
-            <hexa-icon name="ChevronLeftIcon"></hexa-icon>
+          <button type="button" class="commercial-back hexa-icon-btn" aria-label="Back" data-track="cta-page-back" onclick="location.hash='#home'">
+            <hexa-icon name="ArrowLeftIcon"></hexa-icon>
           </button>
-          <h1 class="page-title commercial-page__title">EDI order control</h1>
+          <h1 class="page-title commercial-page__title">Commercial control</h1>
         </div>
 
         <div class="page-tabs commercial-page__tabs" role="tablist" aria-label="Order views">
-          <button type="button" class="page-tab" role="tab" id="tabOrdersOverview" aria-selected="false" data-track="tab-cc-overview" onclick="setOrdersTab('overview')">Overview</button>
-          <button type="button" class="page-tab" role="tab" id="tabOrdersQueue" aria-selected="true" data-track="tab-cc-queue" onclick="setOrdersTab('queue')">Order queue</button>
-          <button type="button" class="page-tab" role="tab" id="tabOrdersHistory" aria-selected="false" data-track="tab-cc-history" onclick="setOrdersTab('history')">Order history</button>
+          <button type="button" class="page-tab" role="tab" 
+          <button type="button" class="page-tab" role="tab" aria-selected="true" data-track="tab-todays">Today's deliveries</button>
+          <button type="button" class="page-tab" role="tab" aria-selected="false" data-track="tab-history">Order history</button>
         </div>
 
         <div class="commercial-toolbar">
@@ -108,13 +175,7 @@
 
         <div class="summary-cards summary-cards--commercial" id="summaryCards" role="region" aria-label="Pipeline summary"></div>
 
-        <div id="ordersOverviewPane" class="orders-pane orders-pane--overview" hidden>
-          <p class="text-body-md text-fg-neutral-secondary mb-md">High-level view of the EDI pipeline. The cards above reflect the same period as the order queue. Open the queue for advanced filters, bulk reprocess, and per-line diagnostics.</p>
-          <div class="flex gap-sm flex-wrap">
-            <button type="button" class="hexa-btn hexa-btn--primary" data-track="overview-to-queue" onclick="setOrdersTab('queue')">Open order queue</button>
-            <a href="#health" class="hexa-btn hexa-btn--secondary" data-track="overview-to-health">Operational health</a>
-          </div>
-        </div>
+        
 
         <div id="ordersQueuePane" class="orders-pane orders-pane--queue">
       <!-- Filter (collapsed by default) -->
@@ -312,27 +373,7 @@
       </div>
     </section>
 
-    <!-- OPERATIONAL HEALTH (summary view — mock aggregates) -->
-    <section id="health" data-screen hidden>
-      <h1 class="page-title">Operational health</h1>
-      <p class="text-body-sm text-fg-neutral-secondary mb-xl">Mock aggregates for the selected period · aligns with FR-15 (HLR)</p>
-      <div class="ops-health-grid" id="opsHealthGrid"></div>
-      <div class="ops-health-charts mt-xl">
-        <article class="hexa-card">
-          <h3 class="hexa-headline mb-md">Top failing rule categories</h3>
-          <p class="text-body-sm text-fg-neutral-secondary mb-md">By order volume in the current filter window.</p>
-          <ul class="ops-leaderboard" id="healthRules"></ul>
-        </article>
-        <article class="hexa-card">
-          <h3 class="hexa-headline mb-md">Most affected retailers / POCs</h3>
-          <p class="text-body-sm text-fg-neutral-secondary mb-md">Failures = blocked + rejected + lines with alerts.</p>
-          <ul class="ops-leaderboard" id="healthPocs"></ul>
-        </article>
-      </div>
-      <p class="text-body-xs text-fg-neutral-tertiary mt-xl">
-        <a href="#orders" class="hexa-text-btn" data-track="health-back-queue">← Back to operations queue</a>
-      </p>
-    </section>
+    
 
   </main>
 
@@ -1068,7 +1109,7 @@
     renderSummary();
     syncToolbarFromApplied();
     const wrap = document.getElementById('tableWrap');
-    if (view.ordersTab === 'overview') {
+    if (false) {
       if (wrap) wrap.innerHTML = '';
       return;
     }
@@ -1200,7 +1241,7 @@
         </label>
         <div class="pages">
           <button class="page-btn" onclick="goToPage(1)"          ${cur === 1 ? 'disabled' : ''} data-track="pagination-first" aria-label="First page"><hexa-icon name="ChevronDoubleLeftIcon"></hexa-icon></button>
-          <button class="page-btn" onclick="goToPage(${cur - 1})" ${cur === 1 ? 'disabled' : ''} data-track="pagination-prev"  aria-label="Previous page"><hexa-icon name="ChevronLeftIcon"></hexa-icon></button>
+          <button class="page-btn" onclick="goToPage(${cur - 1})" ${cur === 1 ? 'disabled' : ''} data-track="pagination-prev"  aria-label="Previous page"><hexa-icon name="ArrowLeftIcon"></hexa-icon></button>
           ${buttons.join('')}
           <button class="page-btn" onclick="goToPage(${cur + 1})" ${cur === totalPages ? 'disabled' : ''} data-track="pagination-next" aria-label="Next page"><hexa-icon name="ChevronRightIcon"></hexa-icon></button>
           <button class="page-btn" onclick="goToPage(${totalPages})" ${cur === totalPages ? 'disabled' : ''} data-track="pagination-last" aria-label="Last page"><hexa-icon name="ChevronDoubleRightIcon"></hexa-icon></button>

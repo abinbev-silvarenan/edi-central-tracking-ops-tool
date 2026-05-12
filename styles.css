@@ -83,6 +83,27 @@ body { background: #FAFAFA; }
   background: var(--hexa-brand-400);
   color: #111111;
 }
+.bees-one-rail__toggle {
+  width: 44px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hexa-fg-neutral-tertiary);
+  border-radius: var(--hexa-radius-md);
+  margin-bottom: var(--hexa-space-xs);
+}
+.bees-one-rail__toggle:hover {
+  background: #f2f2f2;
+  color: var(--hexa-fg-neutral-primary);
+}
+.bees-one-rail__toggle hexa-icon {
+  width: 18px;
+  height: 18px;
+}
 
 .bees-one-main-col {
   flex: 1;
@@ -163,15 +184,66 @@ body { background: #FAFAFA; }
   line-height: 1;
   transform: translateY(1px);
 }
+.bees-one-brand__bars {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 20px;
+  margin-right: 2px;
+}
+.bees-one-brand__bars > span {
+  display: block;
+  width: 4px;
+  height: 18px;
+  background: #111111;
+  border-radius: 1px;
+}
+.bees-one-brand__bars > span:nth-child(1) { height: 12px; }
+.bees-one-brand__bars > span:nth-child(2) { height: 18px; }
+.bees-one-brand__bars > span:nth-child(3) { height: 12px; }
+.bees-one-brand__bars > span:nth-child(4) { height: 18px; }
+
+.bees-one-module-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--hexa-radius-pill);
+}
+.bees-one-module-pill:hover {
+  background: #f2f2f2;
+}
+.bees-one-module-pill__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #B9F6CA;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.bees-one-module-pill__icon hexa-icon {
+  width: 16px;
+  height: 16px;
+  color: #1B5E20;
+}
+.bees-one-module-pill__caret {
+  width: 14px;
+  height: 14px;
+  color: var(--hexa-fg-neutral-tertiary);
+}
 
 .bees-user-chip {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 0;
   height: 40px;
-  padding: 0 8px 0 4px;
-  border: 1px solid var(--hexa-border-default);
-  border-radius: var(--hexa-radius-pill);
+  padding: 0;
+  border: none;
+  border-radius: 50%;
   background: #ffffff;
   cursor: pointer;
   flex-shrink: 0;
@@ -1532,3 +1604,95 @@ body { background: #FAFAFA; }
 .mt-sm { margin-top: var(--hexa-space-sm); }
 
 .bulk-actions { flex-wrap: wrap; }
+
+/* =====================================================================
+   Link admin landing page — module card grid
+   ===================================================================== */
+.link-admin-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--hexa-space-3xl);
+}
+.link-admin-title {
+  font-family: var(--hexa-font-header);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--hexa-fg-neutral-primary);
+  margin: 0 0 var(--hexa-space-xs);
+  text-align: center;
+}
+.link-admin-subtitle {
+  font-size: 15px;
+  color: var(--hexa-fg-neutral-secondary);
+  margin: 0 0 var(--hexa-space-2xl);
+  text-align: center;
+}
+.link-admin-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--hexa-space-lg);
+  width: 100%;
+  max-width: 900px;
+}
+@media (max-width: 900px) {
+  .link-admin-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 540px) {
+  .link-admin-cards { grid-template-columns: 1fr; }
+}
+.link-admin-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--hexa-space-md);
+  padding: var(--hexa-space-xl);
+  background: #ffffff;
+  border: 1px solid var(--hexa-border-default);
+  border-radius: var(--hexa-radius-lg);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--hexa-duration-fast) var(--hexa-easing),
+    box-shadow var(--hexa-duration-fast) var(--hexa-easing);
+  cursor: pointer;
+}
+.link-admin-card:hover {
+  border-color: var(--hexa-neutral-400);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.link-admin-card__icon {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hexa-fg-neutral-secondary);
+}
+.link-admin-card__icon hexa-icon {
+  width: 24px;
+  height: 24px;
+}
+.link-admin-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.link-admin-card__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--hexa-fg-neutral-primary);
+}
+.link-admin-card__desc {
+  font-size: 13px;
+  color: var(--hexa-fg-neutral-secondary);
+  line-height: 1.4;
+}
+
+/* Breadcrumb home icon sizing */
+.commercial-breadcrumb__link hexa-icon {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+}
