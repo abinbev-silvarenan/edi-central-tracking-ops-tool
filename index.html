@@ -1,0 +1,1685 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>EDI Central Tracking — Operations</title>
+  <link rel="stylesheet" href="_shared/hexa-tokens.css" />
+  <link rel="stylesheet" href="_shared/hexa-components.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="_shared/hexa.js" defer></script>
+  <script src="data.js"></script>
+  <script
+    src="_shared/hypothesis-tracker.js"
+    data-prototype-id="edi-central-tracking-ops-tool"
+    data-hypothesis="Vendor operations teams resolve EDI pipeline failures faster when triage, rule diagnostics, bulk reprocess, resolution notes, and operational health live in one internal tool."
+    data-variant="A"></script>
+</head>
+<body>
+
+  <!-- BEES Top bar (custom, modeled on the BEES Order history reference) -->
+  <header class="bees-topbar">
+    <div class="bees-topbar-row bees-topbar-row--primary">
+      <a class="bees-logo" href="#orders" aria-label="BEES home" data-track="nav-logo">
+        <img src="_shared/img/bees-logo.png" alt="BEES" />
+      </a>
+      <div class="bees-search">
+        <hexa-icon name="SearchIcon"></hexa-icon>
+        <input type="search" placeholder="Search orders, POC, SKU, PO…" data-track="topbar-search" aria-label="Search orders" />
+        <button class="bees-search-go" aria-label="Search" data-track="topbar-search-submit"><hexa-icon name="SearchIcon"></hexa-icon></button>
+      </div>
+      <div class="bees-account">
+        <hexa-icon name="StoreIcon"></hexa-icon>
+        <span class="bees-account-id">AMBEV</span>
+        <span class="bees-account-name">Vendor operations · All POCs</span>
+        <hexa-icon name="ChevronDownIcon"></hexa-icon>
+      </div>
+      <div class="bees-topbar-actions">
+        <button class="bees-icon-btn" aria-label="Account" data-track="topbar-account"><hexa-icon name="UserIcon"></hexa-icon></button>
+        <button class="bees-icon-btn" aria-label="Notifications" data-track="topbar-notifications" style="position:relative">
+          <hexa-icon name="BellIcon"></hexa-icon>
+        </button>
+        <button class="bees-icon-btn" aria-label="Cart" data-track="topbar-cart" style="position:relative">
+          <hexa-icon name="CartIcon"></hexa-icon>
+          <span class="bees-icon-badge">5</span>
+        </button>
+      </div>
+    </div>
+    <nav class="bees-topbar-row bees-topbar-row--secondary" aria-label="Primary">
+      <div class="bees-nav-left">
+        <a href="#" data-track="nav-categories" class="bees-nav-link">Product categories <hexa-icon name="ChevronDownIcon"></hexa-icon></a>
+        <a href="#" data-track="nav-order"      class="bees-nav-link">Order <hexa-icon name="ChevronDownIcon"></hexa-icon></a>
+        <a href="#" data-track="nav-commercial" class="bees-nav-link">Commercial management <hexa-icon name="ChevronDownIcon"></hexa-icon></a>
+        <a href="#" data-track="nav-payments"   class="bees-nav-link">Payments</a>
+      </div>
+      <div class="bees-nav-right">
+        <a href="#" data-track="nav-help"    class="bees-nav-link">Help &amp; Support</a>
+        <a href="#orders" data-track="nav-ops-queue" id="navOrdersLink" class="bees-nav-link bees-nav-link--active">EDI Central Tracking — Ops</a>
+        <a href="#health" data-track="nav-ops-health" id="navHealthLink" class="bees-nav-link">Operational health</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="app-shell">
+
+    <!-- ORDERS SCREEN ============================================ -->
+    <section id="orders" data-screen>
+      <h1 class="page-title">EDI Central Tracking — Operations</h1>
+      <p class="text-body-sm text-fg-neutral-secondary mb-lg">Internal vendor operations view · 90-day window · Dense triage layout (HLR draft 0.1)</p>
+
+      <!-- Filter (collapsed by default) -->
+      <div class="filter-block">
+        <button type="button" class="filter-toggle" id="filterToggle" data-track="cta-toggle-filters" onclick="toggleFilterPanel()" aria-expanded="false">
+          <hexa-icon name="FilterIcon"></hexa-icon>
+          Filter
+          <hexa-icon name="ChevronDownIcon" class="caret"></hexa-icon>
+        </button>
+
+        <form class="filters filters--ops" id="filterForm" autocomplete="off" onsubmit="event.preventDefault();applyFilters()" hidden>
+          <div class="hexa-field">
+            <span class="hexa-label">Vendor</span>
+            <div class="dropdown" id="vendorDropdown">
+              <button type="button" class="dropdown-trigger" data-track="filter-open-vendor" onclick="toggleDropdown('vendorDropdown')">
+                <span id="vendorLabel" class="placeholder">All vendors</span>
+                <hexa-icon name="ChevronDownIcon"></hexa-icon>
+              </button>
+              <div class="dropdown-panel" id="vendorPanel"></div>
+            </div>
+          </div>
+          <div class="hexa-field">
+            <span class="hexa-label">Retailer chain</span>
+            <div class="dropdown" id="chainDropdown">
+              <button type="button" class="dropdown-trigger" data-track="filter-open-chain" onclick="toggleDropdown('chainDropdown')">
+                <span id="chainLabel" class="placeholder">All chains</span>
+                <hexa-icon name="ChevronDownIcon"></hexa-icon>
+              </button>
+              <div class="dropdown-panel" id="chainPanel"></div>
+            </div>
+          </div>
+          <div class="hexa-field">
+            <span class="hexa-label">Account / POC</span>
+            <div class="dropdown" id="pocDropdown">
+              <button type="button" class="dropdown-trigger" data-track="filter-open-poc" onclick="toggleDropdown('pocDropdown')">
+                <span id="pocLabel" class="placeholder">All POCs</span>
+                <hexa-icon name="ChevronDownIcon"></hexa-icon>
+              </button>
+              <div class="dropdown-panel" id="pocPanel"></div>
+            </div>
+          </div>
+          <div class="hexa-field">
+            <span class="hexa-label">Matching rule category</span>
+            <div class="dropdown" id="ruleDropdown">
+              <button type="button" class="dropdown-trigger" data-track="filter-open-rule" onclick="toggleDropdown('ruleDropdown')">
+                <span id="ruleLabel" class="placeholder">All rules</span>
+                <hexa-icon name="ChevronDownIcon"></hexa-icon>
+              </button>
+              <div class="dropdown-panel" id="rulePanel"></div>
+            </div>
+          </div>
+          <div class="hexa-field">
+            <span class="hexa-label">Region / zone</span>
+            <div class="dropdown" id="regionDropdown">
+              <button type="button" class="dropdown-trigger" data-track="filter-open-region" onclick="toggleDropdown('regionDropdown')">
+                <span id="regionLabel" class="placeholder">All regions</span>
+                <hexa-icon name="ChevronDownIcon"></hexa-icon>
+              </button>
+              <div class="dropdown-panel" id="regionPanel"></div>
+            </div>
+          </div>
+          <div class="hexa-field">
+            <span class="hexa-label">Sales representative</span>
+            <div class="dropdown" id="repDropdown">
+              <button type="button" class="dropdown-trigger" data-track="filter-open-rep" onclick="toggleDropdown('repDropdown')">
+                <span id="repLabel" class="placeholder">All reps</span>
+                <hexa-icon name="ChevronDownIcon"></hexa-icon>
+              </button>
+              <div class="dropdown-panel" id="repPanel"></div>
+            </div>
+          </div>
+          <div class="hexa-field">
+            <span class="hexa-label">Purchase order number</span>
+            <span class="hexa-input-wrap">
+              <hexa-icon name="SearchIcon"></hexa-icon>
+              <input class="hexa-input" id="poInput" placeholder="e.g. 12345678" inputmode="numeric" />
+            </span>
+          </div>
+          <div class="hexa-field">
+            <span class="hexa-label">Period (max 90 days)</span>
+            <div class="period-row">
+              <span class="hexa-input-wrap"><input class="hexa-input" id="dateFrom" type="date" /></span>
+              <span class="text-fg-neutral-tertiary">→</span>
+              <span class="hexa-input-wrap"><input class="hexa-input" id="dateTo" type="date" /></span>
+            </div>
+          </div>
+          <div class="hexa-field">
+            <span class="hexa-label">Status</span>
+            <div class="dropdown" id="statusDropdown">
+              <button type="button" class="dropdown-trigger" data-track="filter-open-status" onclick="toggleDropdown('statusDropdown')">
+                <span id="statusLabel" class="placeholder">All statuses</span>
+                <hexa-icon name="ChevronDownIcon"></hexa-icon>
+              </button>
+              <div class="dropdown-panel" id="statusPanel"></div>
+            </div>
+          </div>
+          <div class="filter-actions">
+            <div class="left">
+              <button type="submit" id="applyBtn" class="hexa-btn hexa-btn--primary" data-track="cta-apply-filters">
+                <hexa-icon name="FilterIcon"></hexa-icon>
+                Apply filters
+              </button>
+              <button type="button" class="hexa-btn hexa-btn--tertiary" data-track="cta-clear-filters" onclick="clearFilters()">Clear all</button>
+            </div>
+            <div class="text-body-xs text-fg-neutral-tertiary" id="periodHint"></div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Overview KPI cards -->
+      <div class="summary-cards summary-cards--ops" id="summaryCards" role="region" aria-label="Order summary"></div>
+
+      <!-- Active filter chips -->
+      <div class="result-bar" id="resultBar" hidden>
+        <div class="chip-row" id="activeFilters"></div>
+      </div>
+
+      <!-- Bulk actions toolbar — appears above the list when there are
+           selectable rows (Blocked / Rejected / Accepted with alerts). -->
+      <div class="bulk-bar" id="bulkBar">
+        <label class="bulk-select-all">
+          <input type="checkbox" id="bulkSelectAll" data-track="bulk-select-all" onchange="toggleSelectAllOnPage(this.checked)" />
+          <span id="bulkSelectAllLabel">Select all on this page</span>
+        </label>
+        <div class="bulk-actions">
+          <button type="button" class="hexa-btn hexa-btn--secondary" id="bulkSelectFilteredBtn" data-track="bulk-select-filtered" onclick="selectAllMatchingFilters()" disabled>
+            Select all matching filters
+          </button>
+          <span class="bulk-count" id="bulkCount">0 selected</span>
+          <button type="button" class="hexa-btn hexa-btn--tertiary" id="bulkClearBtn" data-track="bulk-clear" onclick="clearSelection()" disabled>Clear selection</button>
+          <button type="button" class="hexa-btn hexa-btn--primary" id="bulkReprocessBtn" data-track="cta-bulk-reprocess" onclick="reprocessSelected()" disabled>
+            <hexa-icon name="SyncIcon"></hexa-icon>
+            <span id="bulkReprocessLabel">Reprocess selected</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- List + pagination -->
+      <div id="tableWrap"></div>
+
+      <!-- Empty state -->
+      <template id="emptyTpl">
+        <div class="hexa-empty">
+          <hexa-illustration name="NoSearchResults"></hexa-illustration>
+          <h3>No orders match your filters</h3>
+          <p>Try widening the period or clearing some filters.</p>
+          <button class="hexa-btn hexa-btn--secondary" data-track="cta-empty-clear" onclick="clearFilters()">Clear all filters</button>
+        </div>
+      </template>
+    </section>
+
+    <!-- ITEM-LEVEL SCREEN ====================================== -->
+    <!-- Reached by clicking an order row. Hash format: #order/<id>.
+         Layout mirrors the BEES "Order details" pattern:
+           1. A dark band sitting flush under the topbar, with breadcrumb
+              on top and the page title + primary action below.
+           2. Light content area below the band with order facts and lines. -->
+    <section id="orderItems" data-screen hidden>
+      <div class="order-details-band">
+        <div class="order-details-band-inner">
+          <nav class="order-details-breadcrumb" aria-label="Breadcrumb">
+            <a href="#orders" class="crumb crumb--icon" data-track="item-breadcrumb-home" aria-label="Home">
+              <hexa-icon name="HomeIcon"></hexa-icon>
+            </a>
+            <hexa-icon name="ChevronRightIcon" class="crumb-sep"></hexa-icon>
+            <a href="#orders" class="crumb" data-track="item-breadcrumb-orders">Operations queue</a>
+            <hexa-icon name="ChevronRightIcon" class="crumb-sep"></hexa-icon>
+            <span class="crumb crumb--current" aria-current="page">Order details</span>
+          </nav>
+          <div class="order-details-band-row">
+            <h1 class="order-details-title">Order details</h1>
+            <div class="order-details-band-actions">
+              <button type="button" class="band-btn band-btn--ghost" data-track="item-open-summary" onclick="openDrawer(view.itemPageOrderId)">
+                <hexa-icon name="InfoIcon"></hexa-icon>
+                View summary
+              </button>
+              <button type="button" class="band-btn band-btn--primary" id="itemPageReprocessBtn" data-track="item-reprocess" onclick="reprocessFromItemPage()">
+                <hexa-icon name="SyncIcon"></hexa-icon>
+                Reprocess order
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="order-details-body">
+        <div class="order-details-card">
+          <div class="order-details-summary" id="itemPageSummary"></div>
+        </div>
+
+        <div class="item-summary-cards" id="itemSummaryCards"></div>
+
+        <div class="order-timeline-section" id="itemTimelineSection"></div>
+
+        <div id="itemListWrap"></div>
+      </div>
+    </section>
+
+    <!-- OPERATIONAL HEALTH (summary view — mock aggregates) -->
+    <section id="health" data-screen hidden>
+      <h1 class="page-title">Operational health</h1>
+      <p class="text-body-sm text-fg-neutral-secondary mb-xl">Mock aggregates for the selected period · aligns with FR-15 (HLR)</p>
+      <div class="ops-health-grid" id="opsHealthGrid"></div>
+      <div class="ops-health-charts mt-xl">
+        <article class="hexa-card">
+          <h3 class="hexa-headline mb-md">Top failing rule categories</h3>
+          <p class="text-body-sm text-fg-neutral-secondary mb-md">By order volume in the current filter window.</p>
+          <ul class="ops-leaderboard" id="healthRules"></ul>
+        </article>
+        <article class="hexa-card">
+          <h3 class="hexa-headline mb-md">Most affected retailers / POCs</h3>
+          <p class="text-body-sm text-fg-neutral-secondary mb-md">Failures = blocked + rejected + lines with alerts.</p>
+          <ul class="ops-leaderboard" id="healthPocs"></ul>
+        </article>
+      </div>
+      <p class="text-body-xs text-fg-neutral-tertiary mt-xl">
+        <a href="#orders" class="hexa-text-btn" data-track="health-back-queue">← Back to operations queue</a>
+      </p>
+    </section>
+
+  </main>
+
+  <!-- BEES Footer -->
+  <footer class="bees-footer">
+    <div class="bees-footer-cols">
+      <div>
+        <h4>About BEES</h4>
+        <a href="#" data-track="footer-learn">Learn about us</a>
+        <a href="#" data-track="footer-privacy">Privacy policy</a>
+        <a href="#" data-track="footer-terms">Terms and conditions</a>
+      </div>
+      <div>
+        <h4>Need help?</h4>
+        <a href="#" data-track="footer-faq">Frequent questions</a>
+        <a href="#" data-track="footer-contact">Contact us</a>
+        <span class="bees-footer-static">Email: bees@za.ab-inbev.com</span>
+        <span class="bees-footer-static">Tel: +27 860 000722</span>
+      </div>
+      <div>
+        <h4>Schedule</h4>
+        <span class="bees-footer-static">Monday to Friday: 7am – 5pm</span>
+        <span class="bees-footer-static">Weekends &amp; Public Holidays: 8am – 2pm</span>
+      </div>
+    </div>
+    <div class="bees-footer-brand">
+      <img class="bees-footer-logo" src="_shared/img/bees-logo.png" alt="BEES" />
+      <p class="bees-footer-copy">© AB InBev 2026. All rights reserved.<br/>Please enjoy responsibly.</p>
+      <a href="#" class="bees-footer-cookie" data-track="footer-cookies">Cookie settings</a>
+    </div>
+  </footer>
+
+  <!-- ORDER DETAIL DRAWER (non-modal side panel) -->
+  <div id="drawerScrim" class="drawer-scrim" hidden onclick="closeDrawer()"></div>
+  <aside id="orderDrawer" class="order-drawer" role="dialog" aria-modal="false" aria-labelledby="drawerTitle" hidden>
+    <header>
+      <div>
+        <div class="text-body-xs text-fg-neutral-tertiary" style="text-transform:uppercase;letter-spacing:.05em">Order detail</div>
+        <h3 id="drawerTitle" style="margin:4px 0 0">—</h3>
+      </div>
+      <button class="hexa-icon-btn" data-track="drawer-close" onclick="closeDrawer()" aria-label="Close">
+        <hexa-icon name="CloseIcon"></hexa-icon>
+      </button>
+    </header>
+    <div class="body" id="drawerBody"></div>
+    <footer class="order-drawer-footer">
+      <button type="button" class="hexa-btn hexa-btn--tertiary" data-track="drawer-cancel" onclick="closeDrawer()">Close</button>
+      <button type="button" class="hexa-btn hexa-btn--tertiary" data-track="drawer-add-note" onclick="openNoteDialogFromDrawer()">
+        <hexa-icon name="EditIcon"></hexa-icon>
+        Add note
+      </button>
+      <button type="button" class="hexa-btn hexa-btn--secondary" data-track="drawer-notify-sales" onclick="openNotifyDialogFromDrawer()">
+        <hexa-icon name="BellIcon"></hexa-icon>
+        Notify sales rep
+      </button>
+      <button type="button" class="hexa-btn hexa-btn--primary" id="drawerReprocess" data-track="drawer-reprocess" onclick="reprocessFromDrawer()">
+        <hexa-icon name="SyncIcon"></hexa-icon>
+        Reprocess
+      </button>
+    </footer>
+  </aside>
+
+  <dialog id="dlgBulk" class="hexa-dialog">
+    <div class="hexa-dialog-header">
+      <h2 class="hexa-headline">Confirm bulk reprocess</h2>
+    </div>
+    <div class="hexa-dialog-body">
+      <p class="text-body-md" id="dlgBulkBody">You are about to reprocess more than 50 orders. This may take several minutes.</p>
+    </div>
+    <div class="hexa-dialog-footer">
+      <button type="button" class="hexa-btn hexa-btn--tertiary" data-track="dlg-bulk-cancel" onclick="document.getElementById('dlgBulk').close()">Cancel</button>
+      <button type="button" class="hexa-btn hexa-btn--primary" data-track="dlg-bulk-confirm" onclick="confirmBulkReprocess()">Confirm reprocess</button>
+    </div>
+  </dialog>
+
+  <dialog id="dlgNote" class="hexa-dialog">
+    <div class="hexa-dialog-header">
+      <h2 class="hexa-headline">Add resolution note</h2>
+    </div>
+    <div class="hexa-dialog-body flex flex-col gap-md">
+      <label class="hexa-field">
+        <span class="hexa-label">Category</span>
+        <select class="hexa-select" id="noteCategory">
+          <option>catalog fix</option>
+          <option>pricing update</option>
+          <option>POC configuration</option>
+          <option>delivery window</option>
+          <option>credit adjustment</option>
+          <option>retailer-side issue</option>
+          <option>other</option>
+        </select>
+      </label>
+      <label class="hexa-field">
+        <span class="hexa-label">Note</span>
+        <span class="hexa-input-wrap">
+          <textarea class="hexa-textarea" id="noteText" rows="4" placeholder="What did you change upstream?"></textarea>
+        </span>
+      </label>
+    </div>
+    <div class="hexa-dialog-footer">
+      <button type="button" class="hexa-btn hexa-btn--tertiary" data-track="dlg-note-cancel" onclick="document.getElementById('dlgNote').close()">Cancel</button>
+      <button type="button" class="hexa-btn hexa-btn--primary" data-track="dlg-note-save" onclick="saveResolutionNote()">Save note</button>
+    </div>
+  </dialog>
+
+  <dialog id="dlgNotify" class="hexa-dialog">
+    <div class="hexa-dialog-header">
+      <h2 class="hexa-headline">Notify sales representative</h2>
+    </div>
+    <div class="hexa-dialog-body flex flex-col gap-md">
+      <p class="text-body-sm text-fg-neutral-secondary" id="dlgNotifySummary"></p>
+      <label class="hexa-field">
+        <span class="hexa-label">Sales rep</span>
+        <select class="hexa-select" id="notifyRepSelect"></select>
+      </label>
+      <label class="hexa-field">
+        <span class="hexa-label">Message</span>
+        <span class="hexa-input-wrap">
+          <textarea class="hexa-textarea" id="notifyBody" rows="5"></textarea>
+        </span>
+      </label>
+    </div>
+    <div class="hexa-dialog-footer">
+      <button type="button" class="hexa-btn hexa-btn--tertiary" data-track="dlg-notify-cancel" onclick="document.getElementById('dlgNotify').close()">Cancel</button>
+      <button type="button" class="hexa-btn hexa-btn--primary" data-track="dlg-notify-send" onclick="sendSalesNotification()">Send notification</button>
+    </div>
+  </dialog>
+
+  <script>
+  // ============================================================
+  // STATE
+  // ============================================================
+  const D = window.EDI_DATA;
+  // Two layers of state:
+  //   draft   = what the user is composing in the filter UI (dropdown checkboxes)
+  //   applied = what the table is filtered by (only updated on Apply)
+  // Live filters (PO# input + Period range) update applied directly so users
+  // see results as they type / pick dates — that matches their mental model.
+  const defaultPocs = () => new Set();
+  const draft = {
+    vendors: new Set(),
+    pocs: defaultPocs(),
+    statuses: new Set(),
+    chains: new Set(),
+    ruleCats: new Set(),
+    regions: new Set(),
+    salesReps: new Set(),
+  };
+  const applied = {
+    vendors: new Set(),
+    pocs: defaultPocs(),
+    poQuery: '',
+    dateFrom: null,
+    dateTo: null,
+    statuses: new Set(),
+    chains: new Set(),
+    ruleCats: new Set(),
+    regions: new Set(),
+    salesReps: new Set(),
+  };
+  const view = {
+    openOrderId: null,
+    itemPageOrderId: null,
+    page: 1,
+    pageSize: 10,
+    selected: new Set(),
+    pendingBulkIds: null,
+    noteTargetId: null,
+    notifyTargetId: null,
+  };
+
+  // Order statuses that can be bulk-reprocessed (and therefore get a checkbox).
+  const REPROCESSABLE_STATUSES = new Set(['BLOCKED', 'REJECTED', 'ALERTS']);
+  const isReprocessable = (o) => REPROCESSABLE_STATUSES.has(o.statusId);
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  function fmtDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  }
+  function fmtDateOnly(iso) {
+    return new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short' });
+  }
+  function fmtMoney(n) { return '$' + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function isoDay(d) { return d.toISOString().slice(0, 10); }
+
+  // Default period: last 30 days (up to 90-day window allowed)
+  (function initPeriod() {
+    const today = new Date();
+    const from = new Date(today.getTime() - 29 * 86400000);
+    document.getElementById('dateTo').value = isoDay(today);
+    document.getElementById('dateFrom').value = isoDay(from);
+    document.getElementById('dateTo').max = isoDay(today);
+    document.getElementById('dateFrom').max = isoDay(today);
+    applied.dateFrom = isoDay(from);
+    applied.dateTo = isoDay(today);
+    document.getElementById('periodHint').textContent = 'Maximum interval: 90 days · default: last 30 days';
+  })();
+
+  // Build dropdown panels — checkboxes mutate DRAFT only.
+  function renderVendorPanel() {
+    const panel = document.getElementById('vendorPanel');
+    panel.innerHTML = D.VENDORS.map(v => `
+      <label class="opt"><input type="checkbox" value="${v.code}" ${draft.vendors.has(v.code) ? 'checked' : ''} onchange="toggleDraft('vendors', this.value, this.checked)"/> ${v.name}</label>
+    `).join('');
+  }
+  function renderPocPanel(query) {
+    const panel = document.getElementById('pocPanel');
+    const q = (query || '').toLowerCase();
+    const list = D.POCS.filter(p => !q || p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q) || p.city.toLowerCase().includes(q) || (p.region || '').toLowerCase().includes(q));
+    panel.innerHTML = `
+      <div class="search">
+        <span class="hexa-input-wrap">
+          <hexa-icon name="SearchIcon"></hexa-icon>
+          <input class="hexa-input" placeholder="Search POC name, id, city…" oninput="renderPocPanel(this.value)" value="${query || ''}" />
+        </span>
+      </div>
+      ${list.map(p => `
+        <label class="opt">
+          <input type="checkbox" value="${p.id}" ${draft.pocs.has(p.id) ? 'checked' : ''} onchange="toggleDraft('pocs', this.value, this.checked)"/>
+          <span style="flex:1">${p.name}</span>
+          <span class="text-body-xs text-fg-neutral-tertiary">${p.id} · ${p.city}</span>
+        </label>
+      `).join('') || '<div class="text-body-sm text-fg-neutral-tertiary p-sm">No POC matches.</div>'}
+    `;
+  }
+  function renderStatusPanel() {
+    const panel = document.getElementById('statusPanel');
+    panel.innerHTML = D.STATUSES.map(s => `
+      <label class="opt"><input type="checkbox" value="${s.id}" ${draft.statuses.has(s.id) ? 'checked' : ''} onchange="toggleDraft('statuses', this.value, this.checked)"/>
+        <span class="hexa-status-badge hexa-status-badge--${s.tone}">${s.label}</span>
+      </label>
+    `).join('');
+  }
+  function renderChainPanel() {
+    const panel = document.getElementById('chainPanel');
+    panel.innerHTML = D.RETAILER_CHAINS.map(c => `
+      <label class="opt"><input type="checkbox" value="${c}" ${draft.chains.has(c) ? 'checked' : ''} onchange="toggleDraft('chains', this.value, this.checked)"/> ${c}</label>
+    `).join('');
+  }
+  function renderRulePanel() {
+    const panel = document.getElementById('rulePanel');
+    panel.innerHTML = D.RULE_CATEGORIES.map(r => `
+      <label class="opt"><input type="checkbox" value="${r}" ${draft.ruleCats.has(r) ? 'checked' : ''} onchange="toggleDraft('ruleCats', this.value, this.checked)"/> ${r}</label>
+    `).join('');
+  }
+  function renderRegionPanel() {
+    const panel = document.getElementById('regionPanel');
+    panel.innerHTML = D.REGIONS.map(r => `
+      <label class="opt"><input type="checkbox" value="${r}" ${draft.regions.has(r) ? 'checked' : ''} onchange="toggleDraft('regions', this.value, this.checked)"/> ${r}</label>
+    `).join('');
+  }
+  function renderRepPanel() {
+    const panel = document.getElementById('repPanel');
+    panel.innerHTML = D.SALES_REPS.map(rep => `
+      <label class="opt"><input type="checkbox" value="${rep.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" ${draft.salesReps.has(rep) ? 'checked' : ''} onchange="toggleDraft('salesReps', this.value, this.checked)"/> ${rep}</label>
+    `).join('');
+  }
+  renderVendorPanel();
+  renderPocPanel('');
+  renderStatusPanel();
+  renderChainPanel();
+  renderRulePanel();
+  renderRegionPanel();
+  renderRepPanel();
+
+  function toggleDraft(key, value, on) {
+    if (on) draft[key].add(value); else draft[key].delete(value);
+    syncDropdownLabels();
+    markDirty();
+    HT.track('filter_drafted', { filter: key, on });
+  }
+
+  function setsEqual(a, b) {
+    if (a.size !== b.size) return false;
+    for (const x of a) if (!b.has(x)) return false;
+    return true;
+  }
+  function isDirty() {
+    return !setsEqual(draft.vendors, applied.vendors)
+        || !setsEqual(draft.pocs, applied.pocs)
+        || !setsEqual(draft.statuses, applied.statuses)
+        || !setsEqual(draft.chains, applied.chains)
+        || !setsEqual(draft.ruleCats, applied.ruleCats)
+        || !setsEqual(draft.regions, applied.regions)
+        || !setsEqual(draft.salesReps, applied.salesReps);
+  }
+  function markDirty() {
+    document.getElementById('applyBtn').classList.toggle('is-dirty', isDirty());
+  }
+
+  function syncDropdownLabels() {
+    const vCount = draft.vendors.size;
+    document.getElementById('vendorLabel').className = vCount ? '' : 'placeholder';
+    document.getElementById('vendorLabel').textContent = vCount ? (vCount + ' vendor' + (vCount > 1 ? 's' : '')) : 'All vendors';
+
+    const pCount = draft.pocs.size;
+    document.getElementById('pocLabel').className = pCount ? '' : 'placeholder';
+    document.getElementById('pocLabel').textContent = pCount ? (pCount + ' POC' + (pCount > 1 ? 's' : '')) : 'All POCs';
+
+    const sCount = draft.statuses.size;
+    document.getElementById('statusLabel').className = sCount ? '' : 'placeholder';
+    document.getElementById('statusLabel').textContent = sCount ? (sCount + ' status' + (sCount > 1 ? 'es' : '')) : 'All statuses';
+
+    const chCount = draft.chains.size;
+    document.getElementById('chainLabel').className = chCount ? '' : 'placeholder';
+    document.getElementById('chainLabel').textContent = chCount ? (chCount + ' chain' + (chCount > 1 ? 's' : '')) : 'All chains';
+
+    const rCount = draft.ruleCats.size;
+    document.getElementById('ruleLabel').className = rCount ? '' : 'placeholder';
+    document.getElementById('ruleLabel').textContent = rCount ? (rCount + ' rule' + (rCount > 1 ? 's' : '')) : 'All rules';
+
+    const zCount = draft.regions.size;
+    document.getElementById('regionLabel').className = zCount ? '' : 'placeholder';
+    document.getElementById('regionLabel').textContent = zCount ? (zCount + ' region' + (zCount > 1 ? 's' : '')) : 'All regions';
+
+    const repCount = draft.salesReps.size;
+    document.getElementById('repLabel').className = repCount ? '' : 'placeholder';
+    document.getElementById('repLabel').textContent = repCount ? (repCount + ' rep' + (repCount > 1 ? 's' : '')) : 'All reps';
+  }
+  syncDropdownLabels();
+
+  // Outside-click closes dropdowns. Panels are position:fixed and rendered as
+  // children of the .dropdown wrapper, so contains() still resolves correctly.
+  document.addEventListener('click', (e) => {
+    document.querySelectorAll('.dropdown.is-open').forEach((dd) => {
+      if (!dd.contains(e.target)) dd.classList.remove('is-open');
+    });
+  });
+  function toggleDropdown(id) {
+    const dd = document.getElementById(id);
+    const isOpen = dd.classList.contains('is-open');
+    document.querySelectorAll('.dropdown.is-open').forEach((d) => d.classList.remove('is-open'));
+    if (!isOpen) {
+      dd.classList.add('is-open');
+      positionDropdownPanel(dd);
+    }
+    event.stopPropagation();
+  }
+  // Position a fixed-positioned panel relative to its trigger button so it
+  // floats above sibling form cells regardless of grid stacking contexts.
+  function positionDropdownPanel(dd) {
+    const trigger = dd.querySelector('.dropdown-trigger');
+    const panel = dd.querySelector('.dropdown-panel');
+    if (!trigger || !panel) return;
+    const r = trigger.getBoundingClientRect();
+    const panelWidth = Math.max(r.width, 240);
+    panel.style.minWidth = panelWidth + 'px';
+    panel.style.top = (r.bottom + 4) + 'px';
+    // Right-align if the panel would overflow the viewport
+    const wouldOverflow = (r.left + panelWidth) > (window.innerWidth - 16);
+    panel.style.left = wouldOverflow ? (r.right - panelWidth) + 'px' : r.left + 'px';
+  }
+  // Reposition on scroll/resize so the panel stays glued to its trigger.
+  ['scroll', 'resize'].forEach(ev => window.addEventListener(ev, () => {
+    document.querySelectorAll('.dropdown.is-open').forEach(positionDropdownPanel);
+  }, true));
+
+  // Period & PO# update APPLIED state directly (live filtering — they feel like search inputs).
+  function enforcePeriodCap() {
+    const fromEl = document.getElementById('dateFrom');
+    const toEl = document.getElementById('dateTo');
+    if (!fromEl.value || !toEl.value) return;
+    const from = new Date(fromEl.value);
+    const to = new Date(toEl.value);
+    const diffDays = Math.round((to - from) / 86400000);
+    if (diffDays < 0) { toEl.value = fromEl.value; }
+    if (diffDays > 90) {
+      const capped = new Date(from.getTime() + 90 * 86400000);
+      toEl.value = isoDay(capped);
+      flashHint('Period capped at 90 days.');
+    }
+    applied.dateFrom = fromEl.value;
+    applied.dateTo = toEl.value;
+    HT.track('period_set', { days: Math.round((new Date(applied.dateTo) - new Date(applied.dateFrom)) / 86400000) + 1 });
+  }
+  function flashHint(msg) {
+    const el = document.getElementById('periodHint');
+    const original = el.textContent;
+    el.textContent = msg;
+    el.style.color = 'var(--hexa-status-warning)';
+    setTimeout(() => { el.textContent = original; el.style.color = ''; }, 2400);
+  }
+  document.getElementById('dateFrom').addEventListener('change', () => { enforcePeriodCap(); view.page = 1; renderTable(); });
+  document.getElementById('dateTo').addEventListener('change', () => { enforcePeriodCap(); view.page = 1; renderTable(); });
+
+  document.getElementById('poInput').addEventListener('input', (e) => {
+    applied.poQuery = e.target.value.trim();
+    view.page = 1;
+    renderTable();
+    if (applied.poQuery) HT.track('filter_applied', { filter: 'po_number', length: applied.poQuery.length });
+  });
+
+  // Apply button: copy DRAFT -> APPLIED for vendor/poc/status, then re-render.
+  function applyFilters() {
+    applied.vendors = new Set(draft.vendors);
+    applied.pocs = new Set(draft.pocs);
+    applied.statuses = new Set(draft.statuses);
+    applied.chains = new Set(draft.chains);
+    applied.ruleCats = new Set(draft.ruleCats);
+    applied.regions = new Set(draft.regions);
+    applied.salesReps = new Set(draft.salesReps);
+    view.page = 1;
+    markDirty();
+    HT.track('filters_applied_explicit', {
+      vendor_count: applied.vendors.size,
+      poc_count: applied.pocs.size,
+      status_count: applied.statuses.size,
+      has_po: !!applied.poQuery,
+      days: Math.round((new Date(applied.dateTo) - new Date(applied.dateFrom)) / 86400000) + 1,
+    });
+    renderTable();
+  }
+
+  function clearFilters() {
+    draft.vendors.clear();
+    draft.pocs = defaultPocs();
+    draft.statuses.clear();
+    draft.chains.clear();
+    draft.ruleCats.clear();
+    draft.regions.clear();
+    draft.salesReps.clear();
+    applied.vendors.clear();
+    applied.pocs = defaultPocs();
+    applied.statuses.clear();
+    applied.chains.clear();
+    applied.ruleCats.clear();
+    applied.regions.clear();
+    applied.salesReps.clear();
+    applied.poQuery = '';
+    document.getElementById('poInput').value = '';
+    // reset period to last 30 days
+    const today = new Date();
+    document.getElementById('dateTo').value = isoDay(today);
+    document.getElementById('dateFrom').value = isoDay(new Date(today.getTime() - 29 * 86400000));
+    applied.dateFrom = document.getElementById('dateFrom').value;
+    applied.dateTo = document.getElementById('dateTo').value;
+    renderVendorPanel(); renderPocPanel(''); renderStatusPanel();
+    renderChainPanel(); renderRulePanel(); renderRegionPanel(); renderRepPanel();
+    syncDropdownLabels();
+    markDirty();
+    view.page = 1;
+    renderTable();
+    HT.track('filters_cleared');
+  }
+
+  // ============================================================
+  // TABLE
+  // ============================================================
+  function filteredOrders(opts = {}) {
+    const fromTs = applied.dateFrom ? new Date(applied.dateFrom).getTime() : 0;
+    const toTs = applied.dateTo ? new Date(applied.dateTo).getTime() + 86400000 - 1 : Infinity;
+    return D.orders.filter((o) => {
+      if (applied.vendors.size && !applied.vendors.has(o.vendorCode)) return false;
+      if (applied.pocs.size && !applied.pocs.has(o.pocId)) return false;
+      if (applied.chains.size && !applied.chains.has(o.retailerChain)) return false;
+      if (applied.regions.size && !applied.regions.has(o.region)) return false;
+      if (applied.salesReps.size && !applied.salesReps.has(o.salesRep)) return false;
+      if (applied.ruleCats.size) {
+        const hit = (o.primaryRuleCategory && applied.ruleCats.has(o.primaryRuleCategory))
+          || o.items.some((it) => it.issueRule && applied.ruleCats.has(it.issueRule));
+        if (!hit) return false;
+      }
+      if (!opts.ignoreStatus && applied.statuses.size && !applied.statuses.has(o.statusId)) return false;
+      if (applied.poQuery && !o.poNumber.includes(applied.poQuery)) return false;
+      const t = new Date(o.receivedAt).getTime();
+      if (t < fromTs || t > toTs) return false;
+      return true;
+    });
+  }
+
+  // Removing an active chip removes it from BOTH draft + applied so it disappears
+  // immediately (matches user expectation when clicking the X on a chip).
+  function removeAppliedFilter(key, value) {
+    applied[key].delete(value);
+    draft[key].delete(value);
+    view.page = 1;
+    syncDropdownLabels();
+    markDirty();
+    if (key === 'vendors') renderVendorPanel();
+    if (key === 'pocs')    renderPocPanel('');
+    if (key === 'statuses') renderStatusPanel();
+    if (key === 'chains') renderChainPanel();
+    if (key === 'ruleCats') renderRulePanel();
+    if (key === 'regions') renderRegionPanel();
+    if (key === 'salesReps') renderRepPanel();
+    renderTable();
+    HT.track('filter_chip_removed', { filter: key });
+  }
+  function clearPoQuery() {
+    document.getElementById('poInput').value = '';
+    applied.poQuery = '';
+    view.page = 1;
+    renderTable();
+    HT.track('filter_chip_removed', { filter: 'po_number' });
+  }
+
+  function renderActiveFilterChips() {
+    const root = document.getElementById('activeFilters');
+    const chips = [];
+    applied.vendors.forEach((v) => {
+      const name = D.VENDORS.find(x => x.code === v)?.name || v;
+      chips.push(`<button class="hexa-chip" onclick="removeAppliedFilter('vendors','${v}')"><hexa-icon name="CloseIcon"></hexa-icon> ${name}</button>`);
+    });
+    applied.statuses.forEach((s) => {
+      const st = D.STATUSES.find(x => x.id === s);
+      chips.push(`<button class="hexa-chip" onclick="removeAppliedFilter('statuses','${s}')"><hexa-icon name="CloseIcon"></hexa-icon> ${st.label}</button>`);
+    });
+    applied.chains.forEach((c) => {
+      chips.push(`<button type="button" class="hexa-chip" onclick='removeAppliedFilter("chains", ${JSON.stringify(c)})'><hexa-icon name="CloseIcon"></hexa-icon> ${c}</button>`);
+    });
+    applied.ruleCats.forEach((r) => {
+      chips.push(`<button type="button" class="hexa-chip" onclick='removeAppliedFilter("ruleCats", ${JSON.stringify(r)})'><hexa-icon name="CloseIcon"></hexa-icon> ${r}</button>`);
+    });
+    applied.regions.forEach((r) => {
+      chips.push(`<button type="button" class="hexa-chip" onclick='removeAppliedFilter("regions", ${JSON.stringify(r)})'><hexa-icon name="CloseIcon"></hexa-icon> ${r}</button>`);
+    });
+    applied.salesReps.forEach((rep) => {
+      chips.push(`<button type="button" class="hexa-chip" onclick='removeAppliedFilter("salesReps", ${JSON.stringify(rep)})'><hexa-icon name="CloseIcon"></hexa-icon> ${rep}</button>`);
+    });
+    if (applied.poQuery) {
+      chips.push(`<button class="hexa-chip" onclick="clearPoQuery()"><hexa-icon name="CloseIcon"></hexa-icon> PO: ${applied.poQuery}</button>`);
+    }
+    if (applied.pocs.size) {
+      chips.push(`<span class="hexa-chip" style="cursor:default">${applied.pocs.size} POC${applied.pocs.size > 1 ? 's' : ''} selected</span>`);
+    }
+    root.innerHTML = chips.join('');
+  }
+
+  // ============================================================
+  // FILTER TOGGLE (collapsed by default, like the reference)
+  // ============================================================
+  function toggleFilterPanel() {
+    const form = document.getElementById('filterForm');
+    const btn = document.getElementById('filterToggle');
+    const open = form.hidden;
+    form.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    HT.track('filter_panel_toggled', { open });
+  }
+
+  function statusPill(o) {
+    const map = { success: 'is-success', warning: 'is-warning', error: 'is-error', info: 'is-info', blocked: 'is-blocked' };
+    return `<span class="status-pill ${map[o.statusTone] || 'is-neutral'}">${o.statusLabel}</span>`;
+  }
+  function statusPillCell(o) {
+    let html = statusPill(o);
+    if (o.statusId === 'BLOCKED' && o.slaUrgent) {
+      html += '<span class="sla-urgent" title="SLA deadline within 12 hours"><hexa-icon name="AlertTriangleIcon"></hexa-icon></span>';
+    }
+    return html;
+  }
+
+  // ============================================================
+  // SUMMARY KPI CARDS — operational triage (HLR FR-4 subset)
+  // ============================================================
+  function renderSummary() {
+    const orders = filteredOrders({ ignoreStatus: true });
+    const total = orders.length || 1;
+    let blocked = 0; let blockedUrgent = 0; let rejected = 0; let alerts = 0; let accepted = 0; let pending = 0;
+    let blockedHoursSum = 0; let blockedHoursN = 0;
+    for (const o of orders) {
+      if (o.statusId === 'BLOCKED') {
+        blocked++;
+        if (o.slaUrgent) blockedUrgent++;
+        if (o.hoursInBlocked != null) { blockedHoursSum += o.hoursInBlocked; blockedHoursN++; }
+      } else if (o.statusId === 'REJECTED') rejected++;
+      else if (o.statusId === 'ALERTS') alerts++;
+      else if (o.statusId === 'ACCEPTED') accepted++;
+      else pending++;
+    }
+    const acceptRate = total ? Math.round(((accepted + alerts) / total) * 100) : 0;
+    const avgBlockedH = blockedHoursN ? Math.round(blockedHoursSum / blockedHoursN) : 0;
+
+    const cards = [
+      { id: 'TOTAL', label: 'Orders in period', tone: 'info', sub: `${total.toLocaleString()} total`, filter: null },
+      { id: 'SLA', label: 'Blocked — SLA urgent', tone: 'error', sub: `${blockedUrgent} < 12h to deadline`, filter: 'SLA' },
+      { id: 'BLOCKED', label: 'Blocked (all)', tone: 'blocked', sub: `${blocked} on hold`, filter: 'BLOCKED' },
+      { id: 'REJECTED', label: 'Rejected', tone: 'error', sub: `${rejected} failed`, filter: 'REJECTED' },
+      { id: 'RATE', label: 'Acceptance rate', tone: 'success', sub: `${acceptRate}% accepted + alerts`, filter: 'RATE' },
+      { id: 'AVG', label: 'Avg time in blocked', tone: 'info', sub: `${avgBlockedH}h (mock)`, filter: null },
+    ];
+    document.getElementById('summaryCards').innerHTML = cards.map((c) => `
+      <div class="summary-card summary-card--ops ${c.filter ? 'is-clickable' : ''}" data-track="ops-summary-${c.id.toLowerCase()}"
+           ${c.filter ? `onclick="applyOpsSummaryCard('${c.filter}')"` : ''} title="${c.label}">
+        <div class="header-row">
+          <span class="label">
+            <span class="dot dot-${c.tone}"></span>
+            <span class="label-text">${c.label}</span>
+          </span>
+        </div>
+        <div class="value-row">
+          <span class="pct" style="font-size:22px">${c.sub}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function applyOpsSummaryCard(kind) {
+    applied.statuses.clear();
+    draft.statuses.clear();
+    if (kind === 'BLOCKED' || kind === 'SLA') {
+      applied.statuses.add('BLOCKED');
+      draft.statuses.add('BLOCKED');
+    } else if (kind === 'REJECTED') {
+      applied.statuses.add('REJECTED');
+      draft.statuses.add('REJECTED');
+    } else if (kind === 'RATE') {
+      applied.statuses.add('ACCEPTED');
+      applied.statuses.add('ALERTS');
+      draft.statuses.add('ACCEPTED');
+      draft.statuses.add('ALERTS');
+    }
+    renderStatusPanel();
+    syncDropdownLabels();
+    markDirty();
+    view.page = 1;
+    HT.track('ops_summary_card_applied', { kind });
+    renderTable();
+  }
+
+  function renderTable() {
+    renderActiveFilterChips();
+    renderSummary();
+    const orders = filteredOrders();
+    const wrap = document.getElementById('tableWrap');
+    if (!orders.length) {
+      wrap.innerHTML = '';
+      const tpl = document.getElementById('emptyTpl');
+      wrap.appendChild(tpl.content.cloneNode(true));
+      return;
+    }
+
+    const total = orders.length;
+    const pageSize = view.pageSize;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    if (view.page > totalPages) view.page = totalPages;
+    const start = (view.page - 1) * pageSize;
+    const end = Math.min(start + pageSize, total);
+    const pageOrders = orders.slice(start, end);
+
+    // Column order is optimised for the user's scan-then-act flow:
+    //   [select] → Status → Receive date → Account → Vendor → PO# → [actions]
+    // Clicking the row body navigates to the Item-level page; the inline
+    // Summary and Reprocess buttons cover the secondary in-place actions.
+    const rows = pageOrders.map((o) => {
+      const selectable = isReprocessable(o);
+      const checked = view.selected.has(o.id);
+      const checkboxCell = selectable
+        ? `<label class="cell-select" onclick="event.stopPropagation()" title="Select for bulk reprocess">
+             <input type="checkbox" data-track="row-select-${o.statusId.toLowerCase()}"
+                    ${checked ? 'checked' : ''}
+                    onchange="toggleRowSelection('${o.id}', this.checked)" />
+           </label>`
+        : `<span class="cell-select cell-select--disabled" title="${o.statusLabel} orders can't be reprocessed"></span>`;
+
+      const reprocessBtn = selectable
+        ? `<button type="button" class="row-action row-action--primary"
+                 data-track="row-reprocess-${o.statusId.toLowerCase()}"
+                 onclick="event.stopPropagation();reprocessOrder('${o.id}')"
+                 title="Reprocess this order">
+             <hexa-icon name="SyncIcon"></hexa-icon>
+           </button>`
+        : '';
+
+      const beesCell = o.beesOrderNumber
+        ? o.beesOrderNumber
+        : '<span class="muted">Not yet assigned</span>';
+
+      return `
+        <div class="order-row order-row--ops ${selectable ? 'is-selectable' : ''} ${checked ? 'is-selected' : ''}"
+             data-id="${o.id}"
+             onclick="openItemPage('${o.id}')"
+             data-track="row-open-items"
+             role="button" tabindex="0"
+             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openItemPage('${o.id}')}">
+          ${checkboxCell}
+          <div class="cell cell-status">${statusPillCell(o)}</div>
+          <div class="cell cell-date">${fmtDate(o.receivedAt)}</div>
+          <div class="cell cell-chain">${o.retailerChain}</div>
+          <div class="cell cell-account">
+            <span class="cell-account-name">${o.pocName}</span>
+            <span class="cell-account-id">${o.pocId}</span>
+          </div>
+          <div class="cell cell-vendor">${o.vendorName}</div>
+          <div class="cell cell-po mono">${o.poNumber}</div>
+          <div class="cell cell-bees mono">${beesCell}</div>
+          <div class="cell cell-num">${o.itemCount}</div>
+          <div class="cell cell-val">${fmtMoney(o.totalValue)}</div>
+          <div class="cell cell-rule">${o.primaryRuleCategory || '—'}</div>
+          <div class="row-actions row-actions--wide" onclick="event.stopPropagation()">
+            <button type="button" class="row-action"
+                    data-track="row-summary"
+                    onclick="event.stopPropagation();openDrawer('${o.id}')"
+                    title="View order summary">
+              <hexa-icon name="InfoIcon"></hexa-icon>
+            </button>
+            ${reprocessBtn}
+            <button type="button" class="row-action"
+                    data-track="row-add-note"
+                    onclick="event.stopPropagation();openNoteDialog('${o.id}')"
+                    title="Add resolution note">
+              <hexa-icon name="EditIcon"></hexa-icon>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    const headerRow = `
+      <div class="order-row order-row--head order-row--ops" role="row">
+        <div class="cell-select cell-select--head" aria-hidden="true"></div>
+        <div class="cell cell-status">Status</div>
+        <div class="cell cell-date">Receive date</div>
+        <div class="cell cell-chain">Chain</div>
+        <div class="cell cell-account">Account / POC</div>
+        <div class="cell cell-vendor">Vendor</div>
+        <div class="cell cell-po">PO number</div>
+        <div class="cell cell-bees">BEES order #</div>
+        <div class="cell cell-num">Items</div>
+        <div class="cell cell-val">Order value</div>
+        <div class="cell cell-rule">Primary rule</div>
+        <div class="row-actions row-actions--wide"></div>
+      </div>
+    `;
+
+    wrap.innerHTML = `
+      <div class="order-table">
+        <div class="order-list">${headerRow}${rows}</div>
+      </div>
+      ${renderPagination(start, end, total, totalPages)}
+    `;
+
+    syncBulkBar(pageOrders);
+  }
+
+  function renderPagination(start, end, total, totalPages) {
+    const cur = view.page;
+    const set = new Set([1, totalPages, cur, cur - 1, cur + 1]);
+    const pageNums = [...set].filter(n => n >= 1 && n <= totalPages).sort((a, b) => a - b);
+    const buttons = [];
+    let prev = 0;
+    for (const n of pageNums) {
+      if (n - prev > 1) buttons.push(`<span class="page-ellipsis">…</span>`);
+      buttons.push(`<button class="page-btn ${n === cur ? 'is-current' : ''}" onclick="goToPage(${n})" data-track="pagination-page" aria-label="Page ${n}">${n}</button>`);
+      prev = n;
+    }
+    return `
+      <div class="pagination">
+        <span class="meta">${(start + 1).toLocaleString()} - ${end.toLocaleString()} of ${total.toLocaleString()}</span>
+        <label class="page-size">
+          Lines per page:
+          <select class="hexa-select" onchange="changePageSize(this.value)">
+            ${[10, 25, 50, 100].map(n => `<option value="${n}" ${n === view.pageSize ? 'selected' : ''}>${n}</option>`).join('')}
+          </select>
+        </label>
+        <div class="pages">
+          <button class="page-btn" onclick="goToPage(1)"          ${cur === 1 ? 'disabled' : ''} data-track="pagination-first" aria-label="First page"><hexa-icon name="ChevronDoubleLeftIcon"></hexa-icon></button>
+          <button class="page-btn" onclick="goToPage(${cur - 1})" ${cur === 1 ? 'disabled' : ''} data-track="pagination-prev"  aria-label="Previous page"><hexa-icon name="ChevronLeftIcon"></hexa-icon></button>
+          ${buttons.join('')}
+          <button class="page-btn" onclick="goToPage(${cur + 1})" ${cur === totalPages ? 'disabled' : ''} data-track="pagination-next" aria-label="Next page"><hexa-icon name="ChevronRightIcon"></hexa-icon></button>
+          <button class="page-btn" onclick="goToPage(${totalPages})" ${cur === totalPages ? 'disabled' : ''} data-track="pagination-last" aria-label="Last page"><hexa-icon name="ChevronDoubleRightIcon"></hexa-icon></button>
+        </div>
+      </div>
+    `;
+  }
+
+  function goToPage(n) {
+    if (n < 1) return;
+    view.page = n;
+    HT.track('pagination_changed', { page: n });
+    renderTable();
+    document.querySelector('.order-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function changePageSize(n) {
+    view.pageSize = Number(n);
+    view.page = 1;
+    HT.track('page_size_changed', { size: view.pageSize });
+    renderTable();
+  }
+
+  renderTable();
+
+  // ============================================================
+  // REPROCESS (mock) — flashes the row, randomises new outcome
+  // ============================================================
+  function applyReprocessOutcome(o) {
+    const r = Math.random();
+    if (r < 0.50) {
+      o.statusId = 'ACCEPTED';  o.statusLabel = 'Accepted';
+      o.statusTone = 'success'; o.reason = '';
+    } else if (r < 0.75) {
+      o.statusId = 'ALERTS';    o.statusLabel = 'Accepted with alerts';
+      o.statusTone = 'warning'; o.reason = D.ALERT_REASONS[Math.floor(Math.random() * D.ALERT_REASONS.length)];
+    } else if (r < 0.90) {
+      o.statusId = 'BLOCKED';   o.statusLabel = 'Blocked';
+      o.statusTone = 'blocked'; o.reason = D.BLOCKED_REASONS[Math.floor(Math.random() * D.BLOCKED_REASONS.length)];
+    } else {
+      o.statusId = 'REJECTED';  o.statusLabel = 'Rejected';
+      o.statusTone = 'error';   o.reason = D.REJECT_REASONS[Math.floor(Math.random() * D.REJECT_REASONS.length)];
+    }
+    // BEES order number is only assigned once the order has been ingested
+    // into the BEES OMS — i.e. after a successful Accepted/Alerts outcome.
+    if (o.statusId === 'ACCEPTED' || o.statusId === 'ALERTS') {
+      if (!o.beesOrderNumber) {
+        o.beesOrderNumber = 'BEES-' + (1000000000 + Math.floor(Math.random() * 8999999999)).toString();
+      }
+    } else {
+      o.beesOrderNumber = null;
+    }
+  }
+
+  function reprocessOrder(id) {
+    const o = D.orders.find(x => x.id === id);
+    if (!o) return;
+    HT.track('reprocess_triggered', { status_before: o.statusId, vendor: o.vendorCode });
+    setTimeout(() => {
+      applyReprocessOutcome(o);
+      HT.track('reprocess_completed', { outcome: o.statusId });
+      renderTable();
+      const row = document.querySelector(`.order-row[data-id="${id}"]`);
+      if (row) row.classList.add('flash');
+      if (view.openOrderId === id) populateDrawer(o);
+    }, 900);
+  }
+
+  function reprocessFromDrawer() {
+    if (!view.openOrderId) return;
+    const o = D.orders.find(x => x.id === view.openOrderId);
+    const btn = document.getElementById('drawerReprocess');
+    btn.classList.add('hexa-btn--loading');
+    btn.disabled = true;
+    HT.track('reprocess_triggered', { status_before: o.statusId, vendor: o.vendorCode, source: 'drawer' });
+    setTimeout(() => {
+      applyReprocessOutcome(o);
+      HT.track('reprocess_completed', { outcome: o.statusId, source: 'drawer' });
+      btn.classList.remove('hexa-btn--loading');
+      btn.disabled = false;
+      populateDrawer(o);
+      renderTable();
+      const row = document.querySelector(`.order-row[data-id="${o.id}"]`);
+      if (row) row.classList.add('flash');
+    }, 900);
+  }
+
+  // ============================================================
+  // DRAWER (non-modal: page stays interactive; close via X / Esc / scrim / Close)
+  // ============================================================
+  function openDrawer(id) {
+    const o = D.orders.find(x => x.id === id);
+    if (!o) return;
+    view.openOrderId = id;
+    HT.track('order_drawer_opened', { status: o.statusId, vendor: o.vendorCode });
+    populateDrawer(o);
+    document.getElementById('orderDrawer').hidden = false;
+    document.getElementById('drawerScrim').hidden = false;
+  }
+  function closeDrawer() {
+    if (!view.openOrderId) return;
+    view.openOrderId = null;
+    document.getElementById('orderDrawer').hidden = true;
+    document.getElementById('drawerScrim').hidden = true;
+    HT.track('order_drawer_closed');
+  }
+  function populateDrawer(o) {
+    document.getElementById('drawerTitle').textContent = 'PO ' + o.poNumber;
+    const reprocessBtn = document.getElementById('drawerReprocess');
+    const reprocessable = (o.statusId === 'REJECTED' || o.statusId === 'ALERTS' || o.statusId === 'BLOCKED');
+    reprocessBtn.style.display = reprocessable ? '' : 'none';
+
+    // Map our extended tones (blocked) onto Hexa's stock alert variants.
+    const alertVariant = o.statusTone === 'success' ? 'info'
+                       : o.statusTone === 'blocked' ? 'warning'
+                       : o.statusTone;
+    const alertIcon = o.statusTone === 'error'   ? 'AlertOctagonIcon'
+                    : o.statusTone === 'blocked' ? 'BlockedIcon'
+                    : o.statusTone === 'warning' ? 'AlertTriangleIcon'
+                    : 'AlertIcon';
+    const alertTitle = o.statusTone === 'error'   ? 'Why was this rejected?'
+                     : o.statusTone === 'blocked' ? 'Why is this on hold?'
+                     : 'What changed?';
+    const blockedFooter = o.statusTone === 'blocked'
+      ? `<div class="text-body-xs text-fg-neutral-secondary" style="margin-top:8px">If not resolved within the SLA, this order will auto-transition to <strong>Rejected</strong>. Fix the underlying issue and reprocess to release it.</div>`
+      : '';
+    const reasonBlock = o.reason ? `
+      <div class="hexa-alert hexa-alert--${alertVariant}">
+        <hexa-icon name="${alertIcon}"></hexa-icon>
+        <div class="hexa-alert-body">
+          <div class="hexa-alert-title">${alertTitle}</div>
+          ${o.reason}
+          ${blockedFooter}
+        </div>
+      </div>` : '';
+
+    document.getElementById('drawerBody').innerHTML = `
+      <div class="section">
+        ${statusPill(o)}
+        ${reasonBlock}
+      </div>
+      <div class="section">
+        <h4>Matching rules fired</h4>
+        <ul class="ops-rule-list">${[...new Map(o.items.filter(it => it.issueRule).map(it => [it.issueRule, it])).entries()]
+          .map(([rule, it]) => '<li><span class="mono text-body-sm">' + (it.ruleId || '—') + '</span> · ' + rule + '</li>').join('') || '<li class="text-body-sm text-fg-neutral-tertiary">No rule exceptions on this order.</li>'}</ul>
+      </div>
+      <div class="section">
+        <h4>Status timeline</h4>
+        <ul class="ops-timeline">${(o.timeline || []).map(ev => '<li><time class="text-body-xs text-fg-neutral-tertiary">' + fmtDate(ev.at) + '</time> — <strong>' + ev.label + '</strong> · ' + ev.detail + ' <span class="text-body-xs text-fg-neutral-tertiary">(' + ev.actor + ')</span></li>').join('')}</ul>
+      </div>
+      <div class="section">
+        <h4>Resolution notes</h4>
+        ${(o.resolutionNotes && o.resolutionNotes.length)
+          ? '<ul class="ops-notes">' + o.resolutionNotes.map(n => '<li><span class="text-body-xs text-fg-neutral-tertiary">' + fmtDate(n.at) + ' · ' + n.author + ' · ' + n.category + '</span><br/>' + n.text + '</li>').join('') + '</ul>'
+          : '<p class="text-body-sm text-fg-neutral-tertiary">No notes yet.</p>'}
+      </div>
+      <div class="section">
+        <h4>Order</h4>
+        <dl class="kv">
+          <dt>Receive date</dt><dd>${fmtDate(o.receivedAt)}</dd>
+          <dt>Vendor</dt><dd>${o.vendorName}</dd>
+          <dt>Retailer chain</dt><dd>${o.retailerChain}</dd>
+          <dt>Region</dt><dd>${o.region}</dd>
+          <dt>Sales rep</dt><dd>${o.salesRep}</dd>
+          <dt>POC</dt><dd>${o.pocName}<br><span class="text-body-xs text-fg-neutral-tertiary">${o.pocId} · ${o.pocCity}</span></dd>
+          <dt>PO number</dt><dd style="font-family:ui-monospace,Menlo,monospace">${o.poNumber}</dd>
+          <dt>Items</dt><dd>${o.itemCount}</dd>
+          <dt>Total value</dt><dd>${fmtMoney(o.totalValue)}</dd>
+        </dl>
+      </div>
+      <div class="section">
+        <h4>What happens when you reprocess?</h4>
+        <p class="text-body-sm text-fg-neutral-secondary">We resubmit this order to the vendor's processing pipeline. Use this after fixing the underlying configuration (POC mapping, item catalog, delivery window). Original PO number is preserved.</p>
+      </div>
+    `;
+  }
+
+  function openNoteDialog(id) {
+    view.noteTargetId = id;
+    document.getElementById('noteText').value = '';
+    document.getElementById('dlgNote').showModal();
+    HT.track('resolution_note_dialog_opened');
+  }
+  function openNoteDialogFromDrawer() {
+    if (view.openOrderId) openNoteDialog(view.openOrderId);
+  }
+  function saveResolutionNote() {
+    const o = D.orders.find((x) => x.id === view.noteTargetId);
+    if (!o) return;
+    const cat = document.getElementById('noteCategory').value;
+    const text = document.getElementById('noteText').value.trim();
+    if (!text) return;
+    if (!o.resolutionNotes) o.resolutionNotes = [];
+    o.resolutionNotes.push({
+      at: new Date().toISOString(),
+      author: 'you@vendor.com',
+      category: cat,
+      text,
+    });
+    document.getElementById('dlgNote').close();
+    HT.track('resolution_note_added', { category: cat });
+    if (view.openOrderId === o.id) populateDrawer(o);
+    view.noteTargetId = null;
+  }
+  function openNotifyDialogFromDrawer() {
+    if (!view.openOrderId) return;
+    view.notifyTargetId = view.openOrderId;
+    const o = D.orders.find((x) => x.id === view.openOrderId);
+    const sel = document.getElementById('notifyRepSelect');
+    sel.innerHTML = D.SALES_REPS.map((r) => `<option>${r}</option>`).join('');
+    sel.value = o.salesRep;
+    document.getElementById('notifyBody').value = 'Issue on PO ' + o.poNumber + ' at ' + o.pocName + '. Please align with the retailer as needed.';
+    document.getElementById('dlgNotifySummary').textContent = o.pocName + ' · ' + o.statusLabel;
+    document.getElementById('dlgNotify').showModal();
+    HT.track('sales_notify_dialog_opened');
+  }
+  function sendSalesNotification() {
+    document.getElementById('dlgNotify').close();
+    HT.track('sales_notification_sent', { rep: document.getElementById('notifyRepSelect').value });
+    view.notifyTargetId = null;
+  }
+
+  // Close drawer on Esc
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && view.openOrderId) closeDrawer(); });
+
+  // ============================================================
+  // BULK SELECTION
+  //   - Only Blocked / Rejected / Accepted-with-alerts orders can be selected.
+  //   - "Select all on page" only acts on the *currently selectable* rows
+  //     of the visible page (it skips Accepted, Processing, Waiting).
+  //   - Selections persist across pages (so the user can build up a batch
+  //     across pagination), but the bulk bar always reflects the count
+  //     against the full applied filter set.
+  // ============================================================
+  function toggleRowSelection(id, on) {
+    if (on) view.selected.add(id); else view.selected.delete(id);
+    HT.track('row_selection_toggled', { id, on, total_selected: view.selected.size });
+    // Cheap re-render: just update the row + the bulk bar (avoid full table redraw)
+    const row = document.querySelector(`.order-row[data-id="${id}"]`);
+    if (row) row.classList.toggle('is-selected', on);
+    const orders = filteredOrders();
+    const start = (view.page - 1) * view.pageSize;
+    const pageOrders = orders.slice(start, start + view.pageSize);
+    syncBulkBar(pageOrders);
+  }
+
+  function toggleSelectAllOnPage(on) {
+    const orders = filteredOrders();
+    const start = (view.page - 1) * view.pageSize;
+    const pageOrders = orders.slice(start, start + view.pageSize);
+    const selectablePageIds = pageOrders.filter(isReprocessable).map(o => o.id);
+    selectablePageIds.forEach(id => { if (on) view.selected.add(id); else view.selected.delete(id); });
+    HT.track('bulk_select_all_toggled', { on, count: selectablePageIds.length });
+    renderTable();
+  }
+
+  function clearSelection() {
+    const n = view.selected.size;
+    view.selected.clear();
+    HT.track('bulk_selection_cleared', { count: n });
+    renderTable();
+  }
+
+  function syncBulkBar(pageOrders) {
+    const bar = document.getElementById('bulkBar');
+    const selectablePage = pageOrders.filter(isReprocessable);
+    // Hide the bar entirely when nothing on this page is selectable AND nothing
+    // is selected globally — keeps the UI clean for clean pages.
+    const showBar = selectablePage.length > 0 || view.selected.size > 0;
+    bar.hidden = !showBar;
+    if (!showBar) return;
+
+    const selectedOnPage = selectablePage.filter(o => view.selected.has(o.id)).length;
+    const allOnPageSelected = selectablePage.length > 0 && selectedOnPage === selectablePage.length;
+
+    const cb = document.getElementById('bulkSelectAll');
+    cb.checked = allOnPageSelected;
+    cb.indeterminate = selectedOnPage > 0 && !allOnPageSelected;
+    cb.disabled = selectablePage.length === 0;
+
+    document.getElementById('bulkSelectAllLabel').textContent =
+      selectablePage.length === 0 ? 'No selectable orders on this page'
+                                  : `Select all on this page (${selectablePage.length})`;
+
+    const total = view.selected.size;
+    document.getElementById('bulkCount').textContent = total === 1 ? '1 selected' : `${total.toLocaleString()} selected`;
+    document.getElementById('bulkClearBtn').disabled = total === 0;
+    const reBtn = document.getElementById('bulkReprocessBtn');
+    reBtn.disabled = total === 0;
+    document.getElementById('bulkReprocessLabel').textContent =
+      total > 0 ? `Reprocess selected (${total.toLocaleString()})` : 'Reprocess selected';
+
+    const filtBtn = document.getElementById('bulkSelectFilteredBtn');
+    const nMatch = filteredOrders().filter(isReprocessable).length;
+    filtBtn.disabled = nMatch === 0;
+  }
+
+  function selectAllMatchingFilters() {
+    const all = filteredOrders().filter(isReprocessable);
+    all.forEach((o) => view.selected.add(o.id));
+    HT.track('bulk_select_all_filtered', { count: all.length });
+    renderTable();
+  }
+
+  function reprocessSelected() {
+    const ids = [...view.selected];
+    if (!ids.length) return;
+    if (ids.length > 50) {
+      view.pendingBulkIds = ids;
+      document.getElementById('dlgBulkBody').innerHTML = '<p class="text-body-md">You are about to reprocess <strong>' + ids.length.toLocaleString() + '</strong> orders. Expect pipeline load and retailer-visible status changes.</p>';
+      document.getElementById('dlgBulk').showModal();
+      return;
+    }
+    runBulkReprocess(ids);
+  }
+
+  function confirmBulkReprocess() {
+    document.getElementById('dlgBulk').close();
+    const ids = view.pendingBulkIds ? [...view.pendingBulkIds] : [...view.selected];
+    view.pendingBulkIds = null;
+    runBulkReprocess(ids);
+  }
+
+  function runBulkReprocess(ids) {
+    const btn = document.getElementById('bulkReprocessBtn');
+    btn.disabled = true;
+    btn.classList.add('hexa-btn--loading');
+    HT.track('bulk_reprocess_triggered', { count: ids.length });
+    setTimeout(() => {
+      const outcomes = { ACCEPTED: 0, ALERTS: 0, BLOCKED: 0, REJECTED: 0 };
+      ids.forEach((id) => {
+        const o = D.orders.find((x) => x.id === id);
+        if (o) { applyReprocessOutcome(o); outcomes[o.statusId] = (outcomes[o.statusId] || 0) + 1; }
+      });
+      HT.track('bulk_reprocess_completed', { count: ids.length, outcomes });
+      view.selected.clear();
+      btn.classList.remove('hexa-btn--loading');
+      renderTable();
+      ids.forEach((id) => {
+        const row = document.querySelector(`.order-row[data-id="${id}"]`);
+        if (row) row.classList.add('flash');
+      });
+    }, 1100);
+  }
+
+  // ============================================================
+  // ITEM-LEVEL PAGE  (#order/<id>)
+  // ============================================================
+  function filterByRuleFromLine(ruleCat) {
+    if (!ruleCat) return;
+    applied.ruleCats.clear();
+    draft.ruleCats.clear();
+    applied.ruleCats.add(ruleCat);
+    draft.ruleCats.add(ruleCat);
+    renderRulePanel();
+    syncDropdownLabels();
+    markDirty();
+    view.page = 1;
+    location.hash = '#orders';
+    renderTable();
+    HT.track('filter_from_line_rule', { rule: ruleCat });
+  }
+
+  function openItemPage(id) {
+    location.hash = '#order/' + id;
+  }
+
+  function renderItemPage(orderId) {
+    const o = D.orders.find(x => x.id === orderId);
+    if (!o) {
+      document.getElementById('itemPageSummary').innerHTML = `<div class="text-body-md">Order not found. <a href="#orders" class="hexa-link">Back to all orders</a></div>`;
+      document.getElementById('itemSummaryCards').innerHTML = '';
+      document.getElementById('itemTimelineSection').innerHTML = '';
+      document.getElementById('itemListWrap').innerHTML = '';
+      return;
+    }
+    view.itemPageOrderId = orderId;
+
+    // Show/hide the "Reprocess order" button based on the order's reprocessability.
+    document.getElementById('itemPageReprocessBtn').style.display = isReprocessable(o) ? '' : 'none';
+
+    // Order facts card — status pill + key/value grid (BEES order #, PO #,
+    // POC, vendor, date, items, totals). Lays out as a responsive 3-column
+    // grid that collapses to 1 on narrow widths.
+    document.getElementById('itemPageSummary').innerHTML = `
+      <div class="order-details-status">
+        ${statusPill(o)}
+        ${o.reason ? `<span class="order-details-reason">${o.reason}</span>` : ''}
+      </div>
+      <dl class="order-details-grid">
+        <div><dt>BEES order number</dt><dd>${o.beesOrderNumber ? `<span class="mono">${o.beesOrderNumber}</span>` : '<span class="text-fg-neutral-tertiary">Not yet assigned</span>'}</dd></div>
+        <div><dt>PO number</dt><dd><span class="mono">${o.poNumber}</span></dd></div>
+        <div><dt>Receive date</dt><dd>${fmtDate(o.receivedAt)}</dd></div>
+        <div><dt>Retailer chain</dt><dd>${o.retailerChain}</dd></div>
+        <div><dt>POC</dt><dd>${o.pocName} <span class="text-fg-neutral-tertiary">${o.pocId} · ${o.pocCity}</span></dd></div>
+        <div><dt>Region</dt><dd>${o.region}</dd></div>
+        <div><dt>Sales rep</dt><dd>${o.salesRep}</dd></div>
+        <div><dt>Vendor</dt><dd>${o.vendorName}</dd></div>
+        <div><dt>Items</dt><dd>${o.itemCount.toLocaleString()}</dd></div>
+        <div><dt>Requested total</dt><dd>${fmtMoney(o.requestedTotalValue ?? o.totalValue)}</dd></div>
+        <div><dt>Delivered total</dt><dd><strong>${fmtMoney(o.totalValue)}</strong></dd></div>
+      </dl>
+    `;
+
+    // Per-item summary chips (counts by line status)
+    const counts = { OK: 0, ALERT: 0, BLOCKED: 0, REJECTED: 0, PENDING: 0 };
+    o.items.forEach(it => { counts[it.status] = (counts[it.status] || 0) + 1; });
+    const chipDef = [
+      { key: 'OK',       label: 'OK',       tone: 'success' },
+      { key: 'ALERT',    label: 'Alerts',   tone: 'warning' },
+      { key: 'BLOCKED',  label: 'Blocked',  tone: 'blocked' },
+      { key: 'REJECTED', label: 'Rejected', tone: 'error' },
+      { key: 'PENDING',  label: 'Pending',  tone: 'info' },
+    ].filter(c => counts[c.key] > 0);
+
+    document.getElementById('itemSummaryCards').innerHTML = chipDef.map(c => `
+      <div class="item-stat">
+        <span class="item-stat-dot dot-${c.tone}"></span>
+        <span class="item-stat-num">${counts[c.key]}</span>
+        <span class="item-stat-label">${c.label}</span>
+      </div>
+    `).join('');
+
+    // The line-item list. Sort by severity (rejected > blocked > alert > pending > ok)
+    // so the most actionable lines surface first.
+    const severity = { REJECTED: 0, BLOCKED: 1, ALERT: 2, PENDING: 3, OK: 4 };
+    const lines = [...o.items].sort((a, b) => severity[a.status] - severity[b.status]);
+
+    const itemRows = lines.map(it => {
+      const lineTone = it.status === 'REJECTED' ? 'error'
+                     : it.status === 'BLOCKED'  ? 'blocked'
+                     : it.status === 'ALERT'    ? 'warning'
+                     : it.status === 'PENDING'  ? 'info'
+                     : 'success';
+      // Use the order-level taxonomy verbatim — never invent new line labels.
+      const lineLabel = it.status === 'REJECTED' ? 'Rejected'
+                      : it.status === 'BLOCKED'  ? 'Blocked'
+                      : it.status === 'ALERT'    ? 'Accepted with alerts'
+                      : it.status === 'PENDING'  ? 'Waiting process'
+                      : 'Accepted';
+
+      // Show the requested vs delivered split only when they diverge.
+      // OK / pending lines and lines without adjustments only show one set.
+      const qtyDiverges   = it.qty !== it.requestedQty;
+      const priceDiverges = it.unitPrice !== it.requestedUnitPrice;
+      const totalDiverges = it.lineValue !== it.requestedLineValue;
+
+      function metric(label, requested, delivered, diverges, isMoney) {
+        const reqStr = isMoney ? fmtMoney(requested) : `${requested.toLocaleString()} ${it.uom}`;
+        const delStr = isMoney ? fmtMoney(delivered) : `${delivered.toLocaleString()} ${it.uom}`;
+        if (!diverges) {
+          return `
+            <div class="item-metric">
+              <div class="item-metric-label">${label}</div>
+              <div class="item-metric-value">${reqStr}</div>
+            </div>`;
+        }
+        return `
+          <div class="item-metric is-adjusted">
+            <div class="item-metric-label">${label}</div>
+            <div class="item-metric-value">
+              <span class="item-metric-was">Requested ${reqStr}</span>
+              <span class="item-metric-arrow">→</span>
+              <span class="item-metric-now">${delStr}</span>
+            </div>
+          </div>`;
+      }
+
+      const issue = it.issueLabel
+        ? `<div class="item-row-issue">
+             <hexa-icon name="${it.status === 'REJECTED' ? 'AlertOctagonIcon'
+                              : it.status === 'BLOCKED'  ? 'BlockedIcon'
+                              : 'AlertTriangleIcon'}"></hexa-icon>
+             <div class="item-row-issue-text">${it.issueLabel}</div>
+           </div>` : '';
+
+      const opsDiag = (it.diagnosticMessage && it.issueRule && it.status !== 'OK' && it.status !== 'PENDING')
+        ? `<div class="item-ops-diag">
+             <p class="text-body-xs text-fg-neutral-tertiary mono">${it.ruleId || ''}</p>
+             <button type="button" class="hexa-text-btn" data-track="filter-by-rule-line" onclick="event.stopPropagation();filterByRuleFromLine(${JSON.stringify(it.issueRule)})">View all orders with this rule category</button>
+             <p class="text-body-sm mt-sm">${it.diagnosticMessage}</p>
+           </div>`
+        : '';
+
+      // Initials for the SKU thumbnail — first letter of each meaningful
+      // word in the product name (Antarctica Original → AO).
+      const initials = it.name.split(/\s|—|-/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+
+      return `
+        <div class="item-row item-row--${lineTone}" data-line="${it.lineNumber}">
+          <div class="item-row-main">
+            <div class="item-thumb" aria-hidden="true">${initials}</div>
+            <div class="item-identity">
+              <div class="item-identity-top">
+                <span class="item-line-num">Line ${String(it.lineNumber).padStart(2, '0')}</span>
+                <span class="status-pill is-${lineTone}">${lineLabel}</span>
+              </div>
+              <div class="item-name-main">${it.name}</div>
+              <div class="item-name-meta">SKU ${it.sku} · ${it.family} · ${it.uom}</div>
+            </div>
+            <div class="item-metrics">
+              ${metric('Requested Qty',         it.requestedQty,       it.qty,       qtyDiverges,   false)}
+              ${metric('Requested Unit Price',  it.requestedUnitPrice, it.unitPrice, priceDiverges, true)}
+              ${metric('Requested line total',  it.requestedLineValue, it.lineValue, totalDiverges, true)}
+            </div>
+          </div>
+          ${issue}
+          ${opsDiag}
+        </div>
+      `;
+    }).join('');
+
+    document.getElementById('itemTimelineSection').innerHTML = `
+      <h3 class="hexa-headline mb-md">Status timeline</h3>
+      <ul class="ops-timeline">${(o.timeline || []).map((ev) => '<li><time class="text-body-xs text-fg-neutral-tertiary">' + fmtDate(ev.at) + '</time> — <strong>' + ev.label + '</strong> · ' + ev.detail + ' <span class="text-body-xs text-fg-neutral-tertiary">(' + ev.actor + ')</span></li>').join('')}</ul>
+    `;
+
+    document.getElementById('itemListWrap').innerHTML = `
+      <div class="item-list-header">
+        <h2 class="item-list-title">Products in this order</h2>
+        <span class="item-list-count">${o.items.length} item${o.items.length === 1 ? '' : 's'}</span>
+      </div>
+      <div class="item-list">${itemRows}</div>
+    `;
+
+    HT.track('item_page_rendered', {
+      order_id: o.id,
+      status: o.statusId,
+      lines: o.items.length,
+      counts,
+    });
+  }
+
+  function reprocessFromItemPage() {
+    if (!view.itemPageOrderId) return;
+    const o = D.orders.find(x => x.id === view.itemPageOrderId);
+    if (!o) return;
+    const btn = document.getElementById('itemPageReprocessBtn');
+    btn.disabled = true;
+    btn.classList.add('hexa-btn--loading');
+    HT.track('reprocess_triggered', { status_before: o.statusId, vendor: o.vendorCode, source: 'item-page' });
+    setTimeout(() => {
+      applyReprocessOutcome(o);
+      // Re-roll the per-item statuses to roughly match the new order status.
+      // Cheap mock: clear all issues if accepted, otherwise leave them.
+      if (o.statusId === 'ACCEPTED') {
+        o.items.forEach((it) => {
+          it.status = 'OK';
+          it.issueCode = null;
+          it.issueLabel = null;
+          it.issueRule = null;
+          it.ruleId = null;
+          it.diagnosticMessage = '';
+        });
+      }
+      HT.track('reprocess_completed', { outcome: o.statusId, source: 'item-page' });
+      btn.classList.remove('hexa-btn--loading');
+      btn.disabled = false;
+      renderItemPage(view.itemPageOrderId);
+      if (view.openOrderId === o.id) populateDrawer(o);
+    }, 900);
+  }
+
+  function renderOperationalHealth() {
+    const orders = filteredOrders({ ignoreStatus: true });
+    const blocked = orders.filter((x) => x.statusId === 'BLOCKED').length;
+    const resolvedSla = Math.min(97, 72 + Math.floor(blocked / 2));
+    document.getElementById('opsHealthGrid').innerHTML = `
+      <article class="hexa-card ops-kpi"><h4>SLA compliance (mock)</h4><p class="hexa-display" style="font-size:36px">${resolvedSla}%</p><p class="text-body-sm text-fg-neutral-secondary">Blocked orders cleared before auto-reject</p></article>
+      <article class="hexa-card ops-kpi"><h4>Reprocess success (mock)</h4><p class="hexa-display" style="font-size:36px">82%</p><p class="text-body-sm text-fg-neutral-secondary">Ended in Accepted or Accepted with alerts</p></article>
+      <article class="hexa-card ops-kpi"><h4>Avg resolution (mock)</h4><p class="hexa-display" style="font-size:36px">6.4h</p><p class="text-body-sm text-fg-neutral-secondary">Mean time from blocked to cleared</p></article>
+    `;
+    const byRule = {};
+    orders.forEach((o) => {
+      o.items.forEach((it) => {
+        if (it.issueRule && it.status !== 'OK' && it.status !== 'PENDING') {
+          byRule[it.issueRule] = (byRule[it.issueRule] || 0) + 1;
+        }
+      });
+    });
+    const topRules = [...Object.entries(byRule)].sort((a, b) => b[1] - a[1]).slice(0, 10);
+    document.getElementById('healthRules').innerHTML = topRules.length
+      ? topRules.map(([k, v]) => '<li><span>' + k + '</span><strong>' + v + '</strong></li>').join('')
+      : '<li class="text-body-sm text-fg-neutral-tertiary">No rule failures in window</li>';
+    const byPoc = {};
+    orders.forEach((o) => {
+      if (o.statusId === 'BLOCKED' || o.statusId === 'REJECTED' || o.statusId === 'ALERTS') {
+        const k = o.pocName + ' · ' + o.pocId;
+        byPoc[k] = (byPoc[k] || 0) + 1;
+      }
+    });
+    const topPocs = [...Object.entries(byPoc)].sort((a, b) => b[1] - a[1]).slice(0, 10);
+    document.getElementById('healthPocs').innerHTML = topPocs.length
+      ? topPocs.map(([k, v]) => '<li><span>' + k + '</span><strong>' + v + '</strong></li>').join('')
+      : '<li class="text-body-sm text-fg-neutral-tertiary">No POC concentration</li>';
+    HT.track('analytics_view_accessed', { screen: 'operational_health' });
+  }
+
+  // ============================================================
+  // SCREEN ROUTING
+  //   #orders         → list view
+  //   #health         → operational health
+  //   #order/<id>     → item-level view for one order
+  // ============================================================
+  function showScreen() {
+    const hash = location.hash || '#orders';
+    const orderMatch = hash.match(/^#order\/(.+)$/);
+    const navO = document.getElementById('navOrdersLink');
+    const navH = document.getElementById('navHealthLink');
+    if (navO && navH) {
+      navO.classList.toggle('bees-nav-link--active', hash === '#orders' || !!orderMatch);
+      navH.classList.toggle('bees-nav-link--active', hash === '#health');
+    }
+
+    if (orderMatch) {
+      document.getElementById('orders').hidden = true;
+      document.getElementById('orderItems').hidden = false;
+      document.getElementById('health').hidden = true;
+      renderItemPage(orderMatch[1]);
+    } else if (hash === '#health') {
+      document.getElementById('orders').hidden = true;
+      document.getElementById('orderItems').hidden = true;
+      document.getElementById('health').hidden = false;
+      view.itemPageOrderId = null;
+      renderOperationalHealth();
+    } else {
+      document.getElementById('orders').hidden = false;
+      document.getElementById('orderItems').hidden = true;
+      document.getElementById('health').hidden = true;
+      view.itemPageOrderId = null;
+      renderTable();
+    }
+    window.scrollTo(0, 0);
+  }
+  addEventListener('hashchange', showScreen);
+  showScreen();
+  </script>
+</body>
+</html>
