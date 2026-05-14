@@ -13,23 +13,33 @@
 ## Target audience
 Vendor operations analysts and managers (internal / vendor portal context — not retailers).
 
-## Success metrics
-| Metric | Source event(s) | Target (for tests) |
-|---|---|---|
-| **Triage depth** | `row-open-items` / sessions with `pageview` on `#orders` | ≥ 40% of sessions open ≥ 1 order item page |
-| **Ops filter use** | `filters_applied_explicit` / sessions | ≥ 70% of sessions apply ≥ 1 structured filter |
-| **Bulk workflow** | `bulk_select_all_filtered` or `bulk_reprocess_completed` | ≥ 25% of sessions that reprocess use bulk paths |
-| **Resolution documentation** | `resolution_note_added` | ≥ 30% of sessions that open drawer add ≥ 1 note (in facilitated tests) |
-| **Sales loop** | `sales_notification_sent` | Observed in role-play scenarios (qualitative) |
+## Metrics
 
-## Tracked events (non-exhaustive)
+Reviewed and updated 2026-05-14 against the new metrics framework (≥ 3 confirmed, quantified, observable metrics required before scaffold).
+
+| # | Name | Type | Threshold | Tracks |
+|---|---|---|---|---|
+| M1 | Triage-to-resolution flow | **Primary** | ≥ 50% of sessions that open ≥ 1 item page also complete ≥ 1 reprocess in the same session | `item_page_rendered` → `reprocess_completed` |
+| M2 | Time to first reprocess | **Time-to-action** | Median < 90s from `pageview` on `#orders` to first `reprocess_triggered` | `pageview` → `reprocess_triggered` |
+| M3 | Structured filter adoption | **Discovery** | ≥ 70% of sessions apply ≥ 1 filter before opening any order | `filters_applied_explicit` → `row-open-items` |
+| M4 | Bulk reprocess workflow | **Task completion** | ≥ 25% of sessions that reprocess anything use the bulk path (≥ 2 orders) | `bulk_select_all_toggled` → `bulk_reprocess_completed` |
+| M5 | Multi-feature depth | **Engagement** | ≥ 40% of sessions use ≥ 3 of: filter, drawer, item page, bulk reprocess | `filters_applied_explicit`, `order_drawer_opened`, `item_page_rendered`, `bulk_reprocess_triggered` |
+
+### Changes from previous version
+- **Removed** "Resolution documentation" (`resolution_note_added`) — event not instrumented in prototype; out of scope this version.
+- **Removed** "Sales loop" (`sales_notification_sent`) — event not instrumented; qualitative observation is not a measurable metric.
+- **Replaced** "Triage depth" (discovery-only) with M1 (primary conversion — triage *and* resolution), which directly answers the hypothesis.
+- **Added** M2 time-to-action to measure the "faster" claim in the hypothesis.
+- **Fixed** track name: `bulk_select_all_filtered` → `bulk_select_all_toggled` (actual event name in code).
+- **Removed** `analytics_view_accessed` from M5 — the `#health` view is not implemented in this prototype version.
+
+## Tracked events (confirmed instrumented)
 - `click` / `pageview` via `data-track` and `hypothesis-tracker.js`
 - `filters_applied_explicit`, `filters_cleared`, `filter_chip_removed`, `filter_from_line_rule`
-- `bulk_select_all_filtered`, `bulk_reprocess_triggered`, `bulk_reprocess_completed`
-- `resolution_note_dialog_opened`, `resolution_note_added`
-- `sales_notify_dialog_opened`, `sales_notification_sent`
-- `analytics_view_accessed` (operational health)
-- Reprocess events mirror the retailer prototype (`reprocess_triggered`, etc.)
+- `bulk_select_all_toggled`, `bulk_reprocess_triggered`, `bulk_reprocess_completed`
+- `order_drawer_opened`, `order_drawer_closed`
+- `item_page_rendered`, `reprocess_triggered`, `reprocess_completed`
+- `summary_card_clicked`, `pagination_changed`, `page_size_changed`
 
 ## Data
 ~100 mock EDI orders across 12 POCs, 4 vendors, 90-day rolling timestamps, deterministic seed. Fields include retailer chain, region, sales rep, SLA urgency on some blocked orders, per-line `ruleId` and ops-facing `diagnosticMessage`, resolution notes, and status timeline.

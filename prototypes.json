@@ -1,0 +1,52 @@
+[
+  {
+    "id": "edi-central-tracking-ops-tool",
+    "name": "EDI Central Tracking — Operations Tool",
+    "hypothesis": "Ops users will adopt a self-service EDI order tracker inside BEES one Link admin instead of contacting support.",
+    "createdAt": "2026-05-12",
+    "metrics": [
+      {
+        "id": "M1",
+        "name": "Triage-to-resolution flow",
+        "type": "primary",
+        "threshold": "≥ 50% of sessions that open ≥ 1 item page also complete ≥ 1 reprocess in the same session",
+        "tracks": ["item_page_rendered", "reprocess_completed"]
+      },
+      {
+        "id": "M2",
+        "name": "Time to first reprocess",
+        "type": "time-to-action",
+        "threshold": "Median < 90s from pageview on #orders to first reprocess_triggered",
+        "tracks": ["pageview", "reprocess_triggered"]
+      },
+      {
+        "id": "M3",
+        "name": "Structured filter adoption",
+        "type": "discovery",
+        "threshold": "≥ 70% of sessions apply ≥ 1 filter before opening any order",
+        "tracks": ["filters_applied_explicit", "row-open-items"]
+      },
+      {
+        "id": "M4",
+        "name": "Bulk reprocess workflow",
+        "type": "task-completion",
+        "threshold": "≥ 25% of sessions that reprocess anything use the bulk path (≥ 2 orders)",
+        "tracks": ["bulk_select_all_toggled", "bulk_reprocess_completed"]
+      },
+      {
+        "id": "M5",
+        "name": "Multi-feature depth",
+        "type": "engagement",
+        "threshold": "≥ 40% of sessions use ≥ 3 of: filter, drawer, item page, bulk reprocess",
+        "tracks": ["filters_applied_explicit", "order_drawer_opened", "item_page_rendered", "bulk_reprocess_triggered"]
+      }
+    ]
+  },
+  {
+    "id": "notification-center-v1",
+    "name": "Notification Center — V1",
+    "hypothesis": "Users who have a centralized notification center will act on alerts faster, reducing missed actions.",
+    "createdAt": "2026-05-14",
+    "metric": "≥ 60% of testers click the notification bell and mark at least one item as read within 60 seconds"
+  }
+]
