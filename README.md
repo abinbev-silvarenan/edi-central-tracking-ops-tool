@@ -6,7 +6,7 @@ Static **hypothesis prototype** for the vendor-operations EDI central tracking o
 
 After enabling Pages (**Settings → Pages → Branch `main` / `/ (root)`**), the app is available at:
 
-**https://silarerenan-cmyk.github.io/edi-central-tracking-ops-tool/**
+**https://abinbev-silvarenan.github.io/edi-central-tracking-ops-tool/**
 
 This repository includes a `.nojekyll` file so the `_shared/` assets folder is served correctly (Jekyll would otherwise skip paths starting with `_`).
 
