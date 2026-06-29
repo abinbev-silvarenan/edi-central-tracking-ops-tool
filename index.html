@@ -149,7 +149,7 @@
           <h1 class="page-title">EDI Central Tracking</h1>
 
           <!-- Filter (collapsed by default) -->
-          <div class="filter-block">
+          <div class="filter-block" id="filterBlock">
             <button type="button" class="filter-toggle" id="filterToggle" data-track="cta-toggle-filters" onclick="toggleFilterPanel()" aria-expanded="false">
               <hexa-icon name="FilterIcon"></hexa-icon>
               Filter
@@ -178,16 +178,6 @@
                 </div>
               </div>
               <div class="hexa-field">
-                <span class="hexa-label">Retailer chain</span>
-                <div class="dropdown" id="chainDropdown">
-                  <button type="button" class="dropdown-trigger" data-track="filter-open-chain" onclick="toggleDropdown('chainDropdown')">
-                    <span id="chainLabel" class="placeholder">All chains</span>
-                    <hexa-icon name="ChevronDownIcon"></hexa-icon>
-                  </button>
-                  <div class="dropdown-panel" id="chainPanel"></div>
-                </div>
-              </div>
-              <div class="hexa-field">
                 <span class="hexa-label">POC</span>
                 <div class="dropdown" id="pocDropdown">
                   <button type="button" class="dropdown-trigger" data-track="filter-open-poc" onclick="toggleDropdown('pocDropdown')">
@@ -198,48 +188,41 @@
                 </div>
               </div>
               <div class="hexa-field">
-                <span class="hexa-label">Vendor</span>
-                <div class="dropdown" id="vendorDropdown">
-                  <button type="button" class="dropdown-trigger" data-track="filter-open-vendor" onclick="toggleDropdown('vendorDropdown')">
-                    <span id="vendorLabel" class="placeholder">All vendors</span>
-                    <hexa-icon name="ChevronDownIcon"></hexa-icon>
-                  </button>
-                  <div class="dropdown-panel" id="vendorPanel"></div>
-                </div>
-              </div>
-              <div class="hexa-field">
-                <span class="hexa-label">Region / Zone</span>
-                <div class="dropdown" id="regionDropdown">
-                  <button type="button" class="dropdown-trigger" data-track="filter-open-region" onclick="toggleDropdown('regionDropdown')">
-                    <span id="regionLabel" class="placeholder">All regions</span>
-                    <hexa-icon name="ChevronDownIcon"></hexa-icon>
-                  </button>
-                  <div class="dropdown-panel" id="regionPanel"></div>
-                </div>
-              </div>
-              <div class="hexa-field">
-                <span class="hexa-label">Sales rep</span>
-                <div class="dropdown" id="repDropdown">
-                  <button type="button" class="dropdown-trigger" data-track="filter-open-rep" onclick="toggleDropdown('repDropdown')">
-                    <span id="repLabel" class="placeholder">All reps</span>
-                    <hexa-icon name="ChevronDownIcon"></hexa-icon>
-                  </button>
-                  <div class="dropdown-panel" id="repPanel"></div>
-                </div>
-              </div>
-              <div class="hexa-field">
                 <span class="hexa-label">PO number</span>
                 <span class="hexa-input-wrap">
                   <hexa-icon name="SearchIcon"></hexa-icon>
                   <input class="hexa-input" id="poInput" placeholder="e.g. 12345678" inputmode="numeric" />
                 </span>
               </div>
+              <div class="hexa-field">
+                <span class="hexa-label">BEES order number</span>
+                <span class="hexa-input-wrap">
+                  <hexa-icon name="SearchIcon"></hexa-icon>
+                  <input class="hexa-input" id="beesInput" placeholder="e.g. BEES-1234567890" />
+                </span>
+              </div>
+              <div class="hexa-field">
+                <span class="hexa-label">Value</span>
+                <div class="period-row">
+                  <span class="hexa-input-wrap"><input class="hexa-input" id="valueMin" type="number" min="0" step="0.01" placeholder="Min" /></span>
+                  <span class="text-fg-neutral-tertiary">→</span>
+                  <span class="hexa-input-wrap"><input class="hexa-input" id="valueMax" type="number" min="0" step="0.01" placeholder="Max" /></span>
+                </div>
+              </div>
               <div class="hexa-field hexa-field--wide">
-                <span class="hexa-label">Period (max 90 days · default last 30 days)</span>
+                <span class="hexa-label">Receive date (max 90 days · default last 30 days)</span>
                 <div class="period-row">
                   <span class="hexa-input-wrap"><input class="hexa-input" id="dateFrom" type="date" /></span>
                   <span class="text-fg-neutral-tertiary">→</span>
                   <span class="hexa-input-wrap"><input class="hexa-input" id="dateTo" type="date" /></span>
+                </div>
+              </div>
+              <div class="hexa-field hexa-field--wide">
+                <span class="hexa-label">Expiration date</span>
+                <div class="period-row">
+                  <span class="hexa-input-wrap"><input class="hexa-input" id="expirationFrom" type="date" /></span>
+                  <span class="text-fg-neutral-tertiary">→</span>
+                  <span class="hexa-input-wrap"><input class="hexa-input" id="expirationTo" type="date" /></span>
                 </div>
               </div>
               <div class="filter-actions">
@@ -255,6 +238,7 @@
             </form>
           </div>
 
+          <div class="orders-panel">
           <!-- Overview KPI cards -->
           <div class="summary-cards" id="summaryCards" role="region" aria-label="Order summary"></div>
 
@@ -282,6 +266,7 @@
 
           <!-- List + pagination -->
           <div id="tableWrap"></div>
+          </div><!-- /.orders-panel -->
 
           <!-- Empty state -->
           <template id="emptyTpl">
@@ -362,19 +347,24 @@
   // ============================================================
   const D = window.EDI_DATA;
 
-  // Filter dimensions per HLR FR-2.
-  const FILTER_DIMS = ['statuses', 'rules', 'chains', 'pocs', 'vendors', 'regions', 'salesReps'];
+  // Filter dimensions aligned to table columns.
+  const FILTER_DIMS = ['statuses', 'rules', 'pocs'];
   const emptyFilterState = () => ({
     statuses: new Set(),
     rules: new Set(),
-    chains: new Set(),
     pocs: new Set(),
-    vendors: new Set(),
-    regions: new Set(),
-    salesReps: new Set(),
   });
   const draft   = emptyFilterState();
-  const applied = Object.assign(emptyFilterState(), { poQuery: '', dateFrom: null, dateTo: null });
+  const applied = Object.assign(emptyFilterState(), {
+    poQuery: '',
+    beesQuery: '',
+    valueMin: '',
+    valueMax: '',
+    expirationFrom: '',
+    expirationTo: '',
+    dateFrom: null,
+    dateTo: null,
+  });
 
   const view = {
     openOrderId: null,
@@ -401,6 +391,10 @@
   function fmtDate(iso) {
     const d = new Date(iso);
     return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  }
+  function fmtDateOnly(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
   }
   function isoDay(d) { return d.toISOString().slice(0, 10); }
   function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -447,11 +441,6 @@
       ${rejectedRules.join('')}
     `;
   }
-  function renderChainPanel() {
-    document.getElementById('chainPanel').innerHTML = D.CHAINS.map((c) =>
-      optionRow(c.code, escapeHtml(c.name), draft.chains.has(c.code), `toggleDraft('chains','${c.code}', this.checked)`)
-    ).join('');
-  }
   function renderPocPanel(query) {
     const q = (query || '').toLowerCase();
     const list = D.POCS.filter((p) => !q || p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q) || p.city.toLowerCase().includes(q));
@@ -471,24 +460,11 @@
       `).join('') || '<div class="text-body-sm text-fg-neutral-tertiary p-sm">No POC matches.</div>'}
     `;
   }
-  function renderVendorPanel() {
-    document.getElementById('vendorPanel').innerHTML = D.VENDORS.map((v) =>
-      optionRow(v.code, escapeHtml(v.name), draft.vendors.has(v.code), `toggleDraft('vendors','${v.code}', this.checked)`)
-    ).join('');
-  }
-  function renderRegionPanel() {
-    document.getElementById('regionPanel').innerHTML = D.REGIONS.map((r) =>
-      optionRow(r.code, escapeHtml(r.name), draft.regions.has(r.code), `toggleDraft('regions','${r.code}', this.checked)`)
-    ).join('');
-  }
-  function renderRepPanel() {
-    document.getElementById('repPanel').innerHTML = D.SALES_REPS.map((r) =>
-      optionRow(r.id, escapeHtml(r.name), draft.salesReps.has(r.id), `toggleDraft('salesReps','${r.id}', this.checked)`)
-    ).join('');
-  }
+  function renderVendorPanel() { /* removed */ }
+  function renderRegionPanel() { /* removed */ }
+  function renderRepPanel() { /* removed */ }
   function renderAllPanels() {
-    renderStatusPanel(); renderRulePanel(); renderChainPanel(); renderPocPanel('');
-    renderVendorPanel(); renderRegionPanel(); renderRepPanel();
+    renderStatusPanel(); renderRulePanel(); renderPocPanel('');
   }
   renderAllPanels();
 
@@ -505,7 +481,36 @@
     return true;
   }
   function isDirty() {
-    return FILTER_DIMS.some((d) => !setsEqual(draft[d], applied[d]));
+    if (FILTER_DIMS.some((d) => !setsEqual(draft[d], applied[d]))) return true;
+    const draftScalars = scalarFilterValues('draft');
+    const appliedScalars = scalarFilterValues('applied');
+    return Object.keys(draftScalars).some((k) => draftScalars[k] !== appliedScalars[k]);
+  }
+  function scalarFilterValues(target) {
+    const src = target === 'draft' ? {
+      poQuery: document.getElementById('poInput').value.trim(),
+      beesQuery: document.getElementById('beesInput').value.trim(),
+      valueMin: document.getElementById('valueMin').value.trim(),
+      valueMax: document.getElementById('valueMax').value.trim(),
+      expirationFrom: document.getElementById('expirationFrom').value,
+      expirationTo: document.getElementById('expirationTo').value,
+    } : {
+      poQuery: applied.poQuery,
+      beesQuery: applied.beesQuery,
+      valueMin: applied.valueMin,
+      valueMax: applied.valueMax,
+      expirationFrom: applied.expirationFrom,
+      expirationTo: applied.expirationTo,
+    };
+    return src;
+  }
+  function syncScalarInputsFromApplied() {
+    document.getElementById('poInput').value = applied.poQuery;
+    document.getElementById('beesInput').value = applied.beesQuery;
+    document.getElementById('valueMin').value = applied.valueMin;
+    document.getElementById('valueMax').value = applied.valueMax;
+    document.getElementById('expirationFrom').value = applied.expirationFrom;
+    document.getElementById('expirationTo').value = applied.expirationTo;
   }
   function markDirty() {
     document.getElementById('applyBtn').classList.toggle('is-dirty', isDirty());
@@ -522,11 +527,7 @@
     };
     set('statusLabel',  draft.statuses.size,  'status',  'statuses', 'All statuses');
     set('ruleLabel',    draft.rules.size,     'rule',    'rules',    'All rules');
-    set('chainLabel',   draft.chains.size,    'chain',   'chains',   'All chains');
     set('pocLabel',     draft.pocs.size,      'POC',     'POCs',     'All POCs');
-    set('vendorLabel',  draft.vendors.size,   'vendor',  'vendors',  'All vendors');
-    set('regionLabel',  draft.regions.size,   'region',  'regions',  'All regions');
-    set('repLabel',     draft.salesReps.size, 'rep',     'reps',     'All reps');
   }
   syncDropdownLabels();
 
@@ -534,6 +535,14 @@
     document.querySelectorAll('.dropdown.is-open').forEach((dd) => {
       if (!dd.contains(e.target)) dd.classList.remove('is-open');
     });
+    const filterBlock = document.getElementById('filterBlock');
+    const filterForm = document.getElementById('filterForm');
+    const filterToggle = document.getElementById('filterToggle');
+    if (filterForm && !filterForm.hidden && filterBlock && !filterBlock.contains(e.target)) {
+      filterForm.hidden = true;
+      filterToggle.setAttribute('aria-expanded', 'false');
+      HT.track('filter_panel_toggled', { open: false, reason: 'click_outside' });
+    }
   });
   function toggleDropdown(id) {
     const dd = document.getElementById(id);
@@ -587,15 +596,25 @@
   document.getElementById('dateFrom').addEventListener('change', () => { enforcePeriodCap(); view.page = 1; renderTable(); });
   document.getElementById('dateTo').addEventListener('change', () => { enforcePeriodCap(); view.page = 1; renderTable(); });
 
-  document.getElementById('poInput').addEventListener('input', (e) => {
-    applied.poQuery = e.target.value.trim();
-    view.page = 1;
-    renderTable();
-    if (applied.poQuery) HT.track('filter_applied', { filter: 'po_number', length: applied.poQuery.length });
-  });
+  document.getElementById('poInput').addEventListener('input', () => { markDirty(); });
+  document.getElementById('beesInput').addEventListener('input', () => { markDirty(); });
+  document.getElementById('valueMin').addEventListener('input', () => { markDirty(); });
+  document.getElementById('valueMax').addEventListener('input', () => { markDirty(); });
+  document.getElementById('expirationFrom').addEventListener('change', () => { markDirty(); });
+  document.getElementById('expirationTo').addEventListener('change', () => { markDirty(); });
+
+  function applyScalarFilters() {
+    applied.poQuery = document.getElementById('poInput').value.trim();
+    applied.beesQuery = document.getElementById('beesInput').value.trim();
+    applied.valueMin = document.getElementById('valueMin').value.trim();
+    applied.valueMax = document.getElementById('valueMax').value.trim();
+    applied.expirationFrom = document.getElementById('expirationFrom').value;
+    applied.expirationTo = document.getElementById('expirationTo').value;
+  }
 
   function applyFilters() {
     FILTER_DIMS.forEach((d) => { applied[d] = new Set(draft[d]); });
+    applyScalarFilters();
     view.page = 1;
     markDirty();
     const dims = FILTER_DIMS.filter((d) => applied[d].size);
@@ -603,6 +622,9 @@
       filter_dimensions: dims,
       filter_count: dims.length,
       has_po: !!applied.poQuery,
+      has_bees: !!applied.beesQuery,
+      has_value: !!(applied.valueMin || applied.valueMax),
+      has_expiration: !!(applied.expirationFrom || applied.expirationTo),
       days: Math.round((new Date(applied.dateTo) - new Date(applied.dateFrom)) / 86400000) + 1,
     });
     renderTable();
@@ -611,7 +633,12 @@
   function clearFilters() {
     FILTER_DIMS.forEach((d) => { draft[d].clear(); applied[d].clear(); });
     applied.poQuery = '';
-    document.getElementById('poInput').value = '';
+    applied.beesQuery = '';
+    applied.valueMin = '';
+    applied.valueMax = '';
+    applied.expirationFrom = '';
+    applied.expirationTo = '';
+    syncScalarInputsFromApplied();
     const today = new Date();
     document.getElementById('dateTo').value = isoDay(today);
     document.getElementById('dateFrom').value = isoDay(new Date(today.getTime() - 29 * 86400000));
@@ -631,17 +658,27 @@
   function filteredOrders(opts = {}) {
     const fromTs = applied.dateFrom ? new Date(applied.dateFrom).getTime() : 0;
     const toTs = applied.dateTo ? new Date(applied.dateTo).getTime() + 86400000 - 1 : Infinity;
+    const expFromTs = applied.expirationFrom ? new Date(applied.expirationFrom).getTime() : 0;
+    const expToTs = applied.expirationTo ? new Date(applied.expirationTo).getTime() + 86400000 - 1 : Infinity;
+    const minValue = applied.valueMin !== '' ? Number(applied.valueMin) : null;
+    const maxValue = applied.valueMax !== '' ? Number(applied.valueMax) : null;
     return D.orders.filter((o) => {
       if (!opts.ignoreStatus && applied.statuses.size && !applied.statuses.has(o.statusId)) return false;
       if (applied.rules.size && (!o.ruleCode || !applied.rules.has(o.ruleCode))) return false;
-      if (applied.chains.size && !applied.chains.has(o.chainCode)) return false;
       if (applied.pocs.size && !applied.pocs.has(o.pocId)) return false;
-      if (applied.vendors.size && !applied.vendors.has(o.vendorCode)) return false;
-      if (applied.regions.size && !applied.regions.has(o.pocRegion)) return false;
-      if (applied.salesReps.size && !applied.salesReps.has(o.salesRepId)) return false;
       if (applied.poQuery && !o.poNumber.includes(applied.poQuery)) return false;
+      if (applied.beesQuery) {
+        if (!o.beesOrderNumber || !o.beesOrderNumber.toLowerCase().includes(applied.beesQuery.toLowerCase())) return false;
+      }
+      if (minValue !== null && !Number.isNaN(minValue) && o.totalValue < minValue) return false;
+      if (maxValue !== null && !Number.isNaN(maxValue) && o.totalValue > maxValue) return false;
       const t = new Date(o.receivedAt).getTime();
       if (t < fromTs || t > toTs) return false;
+      if (applied.expirationFrom || applied.expirationTo) {
+        const expTs = new Date(o.expirationDate).getTime();
+        if (applied.expirationFrom && expTs < expFromTs) return false;
+        if (applied.expirationTo && expTs > expToTs) return false;
+      }
       return true;
     });
   }
@@ -660,8 +697,37 @@
     document.getElementById('poInput').value = '';
     applied.poQuery = '';
     view.page = 1;
+    markDirty();
     renderTable();
     HT.track('filter_chip_removed', { filter: 'po_number' });
+  }
+  function clearBeesQuery() {
+    document.getElementById('beesInput').value = '';
+    applied.beesQuery = '';
+    view.page = 1;
+    markDirty();
+    renderTable();
+    HT.track('filter_chip_removed', { filter: 'bees_order_number' });
+  }
+  function clearValueFilter() {
+    document.getElementById('valueMin').value = '';
+    document.getElementById('valueMax').value = '';
+    applied.valueMin = '';
+    applied.valueMax = '';
+    view.page = 1;
+    markDirty();
+    renderTable();
+    HT.track('filter_chip_removed', { filter: 'value' });
+  }
+  function clearExpirationFilter() {
+    document.getElementById('expirationFrom').value = '';
+    document.getElementById('expirationTo').value = '';
+    applied.expirationFrom = '';
+    applied.expirationTo = '';
+    view.page = 1;
+    markDirty();
+    renderTable();
+    HT.track('filter_chip_removed', { filter: 'expiration_date' });
   }
 
   function chipFor(dim, value, label) {
@@ -678,27 +744,30 @@
       const rule = D.RULE_BY_CODE[r];
       if (rule) chips.push(chipFor('rules', r, rule.label));
     });
-    applied.chains.forEach((c) => {
-      const ch = D.CHAINS.find((x) => x.code === c);
-      if (ch) chips.push(chipFor('chains', c, ch.name));
-    });
     if (applied.pocs.size) {
       chips.push(`<span class="hexa-chip" style="cursor:default">${applied.pocs.size} POC${applied.pocs.size > 1 ? 's' : ''} selected</span>`);
     }
-    applied.vendors.forEach((v) => {
-      const ve = D.VENDORS.find((x) => x.code === v);
-      if (ve) chips.push(chipFor('vendors', v, ve.name));
-    });
-    applied.regions.forEach((rg) => {
-      const re = D.REGIONS.find((x) => x.code === rg);
-      if (re) chips.push(chipFor('regions', rg, re.name));
-    });
-    applied.salesReps.forEach((rp) => {
-      const re = D.SALES_REPS.find((x) => x.id === rp);
-      if (re) chips.push(chipFor('salesReps', rp, re.name));
-    });
     if (applied.poQuery) {
       chips.push(`<button class="hexa-chip" data-track="chip-remove-po" onclick="clearPoQuery()"><hexa-icon name="CloseIcon"></hexa-icon> PO: ${escapeHtml(applied.poQuery)}</button>`);
+    }
+    if (applied.beesQuery) {
+      chips.push(`<button class="hexa-chip" data-track="chip-remove-bees" onclick="clearBeesQuery()"><hexa-icon name="CloseIcon"></hexa-icon> BEES: ${escapeHtml(applied.beesQuery)}</button>`);
+    }
+    if (applied.valueMin || applied.valueMax) {
+      const label = applied.valueMin && applied.valueMax
+        ? `Value: ${applied.valueMin} – ${applied.valueMax}`
+        : applied.valueMin
+          ? `Value ≥ ${applied.valueMin}`
+          : `Value ≤ ${applied.valueMax}`;
+      chips.push(`<button class="hexa-chip" data-track="chip-remove-value" onclick="clearValueFilter()"><hexa-icon name="CloseIcon"></hexa-icon> ${escapeHtml(label)}</button>`);
+    }
+    if (applied.expirationFrom || applied.expirationTo) {
+      const label = applied.expirationFrom && applied.expirationTo
+        ? `Expiration: ${applied.expirationFrom} – ${applied.expirationTo}`
+        : applied.expirationFrom
+          ? `Expiration from ${applied.expirationFrom}`
+          : `Expiration until ${applied.expirationTo}`;
+      chips.push(`<button class="hexa-chip" data-track="chip-remove-expiration" onclick="clearExpirationFilter()"><hexa-icon name="CloseIcon"></hexa-icon> ${escapeHtml(label)}</button>`);
     }
     document.getElementById('resultBar').hidden = chips.length === 0;
     root.innerHTML = chips.join('');
@@ -858,13 +927,14 @@
           <div class="cell cell-date">${fmtDate(o.receivedAt)}</div>
           <div class="cell cell-account">
             <span class="cell-account-name">${escapeHtml(o.pocName)}</span>
-            <span class="cell-account-id">${o.pocId} · ${escapeHtml(o.chainName)}</span>
+            <span class="cell-account-id">${o.pocId}</span>
           </div>
           <div class="cell cell-rule">${ruleBadge(o.ruleCode, 'row')}</div>
           <div class="cell cell-po mono">${o.poNumber}</div>
           <div class="cell cell-bees mono">${o.beesOrderNumber
               ? o.beesOrderNumber
               : `<span class="muted">Not yet assigned</span>`}</div>
+          <div class="cell cell-expiration">${fmtDateOnly(o.expirationDate)}</div>
           <div class="cell cell-value">${fmtMoney(o.totalValue)}</div>
           <div class="row-actions" onclick="event.stopPropagation()">
             <button type="button" class="row-action"
@@ -884,12 +954,13 @@
         <div class="cell-select cell-select--head" aria-hidden="true"></div>
         <div class="cell cell-status">Status</div>
         <div class="cell cell-date">Receive date</div>
-        <div class="cell cell-account">POC / Chain</div>
+        <div class="cell cell-account">POC</div>
         <div class="cell cell-rule">Business rule</div>
         <div class="cell cell-po">PO number</div>
         <div class="cell cell-bees">BEES order number</div>
+        <div class="cell cell-expiration">Expiration date</div>
         <div class="cell cell-value">Value</div>
-        <div class="row-actions"></div>
+        <div class="cell cell-actions">Actions</div>
       </div>
     `;
 

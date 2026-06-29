@@ -268,6 +268,8 @@ window.EDI_DATA = (function () {
     const status = pickWeighted(STATUSES);
     const minutesAgo = Math.floor(rand() * 90 * 24 * 60);
     const receivedAt = new Date(now - minutesAgo * 60 * 1000);
+    const expirationDays = 7 + Math.floor(rand() * 38);
+    const expirationDate = new Date(receivedAt.getTime() + expirationDays * DAY);
     const po = (10000000 + Math.floor(rand() * 89999999)).toString();
     const itemCount = 3 + Math.floor(rand() * 9);
 
@@ -365,6 +367,7 @@ window.EDI_DATA = (function () {
     orders.push({
       id: 'EDI-' + String(100000 + i),
       receivedAt: receivedAt.toISOString(),
+      expirationDate: expirationDate.toISOString(),
       vendorCode: vendor.code,
       vendorName: vendor.name,
       chainCode: chain.code,

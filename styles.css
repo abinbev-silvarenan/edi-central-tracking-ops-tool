@@ -412,11 +412,17 @@ body { background: #FAFAFA; }
 /* =====================================================================
    SUMMARY CARDS
    ===================================================================== */
+.orders-panel {
+  width: 100%;
+  min-width: 0;
+}
+
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--hexa-space-sm);
   margin-bottom: var(--hexa-space-xl);
+  width: 100%;
 }
 @media (max-width: 720px) { .summary-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 420px) { .summary-cards { grid-template-columns: 1fr; } }
@@ -552,22 +558,24 @@ body { background: #FAFAFA; }
   overflow-y: hidden;
 }
 .order-list {
-  min-width: 1380px;
+  min-width: 0;
+  width: 100%;
 }
 
 .order-row {
   display: grid;
   grid-template-columns:
-    32px /* select */
-    132px /* status pill */
-    160px /* receive date */
-    minmax(220px, 1.6fr) /* POC / chain */
-    minmax(180px, 1.2fr) /* business rule */
-    132px /* PO number */
-    180px /* BEES order number */
-    120px /* value */
-    96px; /* row actions (info + take action) */
-  gap: var(--hexa-space-lg);
+    28px /* select */
+    minmax(96px, 0.75fr) /* status pill */
+    minmax(108px, 0.9fr) /* receive date */
+    minmax(112px, 1.1fr) /* POC */
+    minmax(108px, 1fr) /* business rule */
+    minmax(88px, 0.7fr) /* PO number */
+    minmax(104px, 0.95fr) /* BEES order number */
+    minmax(96px, 0.85fr) /* expiration date */
+    minmax(64px, 0.55fr) /* value */
+    76px; /* actions */
+  gap: var(--hexa-space-md);
   align-items: center;
   padding: var(--hexa-space-md) var(--hexa-space-xl);
   border-bottom: 1px solid var(--hexa-border-default);
@@ -630,6 +638,8 @@ body { background: #FAFAFA; }
   font-weight: 600;
 }
 .order-row--head .cell-select--head { width: 24px; height: 24px; }
+.order-row--head .cell-actions { text-align: right; }
+.order-row .cell-expiration { font-size: 13px; }
 
 @keyframes hexa-row-flash { from { background: rgba(255, 192, 0, 0.20); } to { background: transparent; } }
 .order-row.flash { animation: hexa-row-flash 1.6s ease-out; }
