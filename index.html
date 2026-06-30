@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="styles.css" />
   <script src="_shared/hexa.js" defer></script>
   <script src="data.js"></script>
+  <script src="i18n.js"></script>
   <script
     src="_shared/hypothesis-tracker.js"
     data-prototype-id="edi-central-tracking-ops-tool"
@@ -68,10 +69,20 @@
             </span>
             <span class="bees-one-brand__product">one</span>
           </a>
-          <button type="button" class="bees-one-module-pill" aria-label="Module selector">
-            <span class="bees-one-module-pill__icon"><hexa-icon name="GlobeIcon"></hexa-icon></span>
-            <hexa-icon name="ChevronDownIcon" class="bees-one-module-pill__caret"></hexa-icon>
-          </button>
+          <div class="lang-switcher" id="langSwitcher">
+            <button type="button" class="bees-one-module-pill" id="langToggle"
+              data-track="lang-menu-toggle" data-i18n-aria="lang.menu" aria-label="Language" aria-expanded="false"
+              aria-haspopup="true" onclick="toggleLangMenu(event)">
+              <span class="bees-one-module-pill__icon"><hexa-icon name="GlobeIcon"></hexa-icon></span>
+              <hexa-icon name="ChevronDownIcon" class="bees-one-module-pill__caret"></hexa-icon>
+            </button>
+            <div class="lang-switcher-menu" id="langMenu" role="menu" hidden>
+              <button type="button" class="lang-switcher-option" role="menuitemradio" data-lang="en"
+                data-track="lang-select-en" onclick="setLanguage('en')">English</button>
+              <button type="button" class="lang-switcher-option" role="menuitemradio" data-lang="es"
+                data-track="lang-select-es" onclick="setLanguage('es')">Español</button>
+            </div>
+          </div>
           <span class="bees-topbar-spacer"></span>
           <button type="button" class="bees-toolbar-btn" aria-label="Notifications">
             <hexa-icon name="BellIcon"></hexa-icon>
@@ -146,92 +157,102 @@
 
         <!-- SCREEN 2: EDI Central Tracking (orders list) -->
         <section id="orders" data-screen hidden>
-          <h1 class="page-title">EDI Central Tracking</h1>
+          <h1 class="page-title" data-i18n="page.ediTitle">EDI Central Tracking</h1>
 
           <!-- Filter (collapsed by default) -->
           <div class="filter-block" id="filterBlock">
             <button type="button" class="filter-toggle" id="filterToggle" data-track="cta-toggle-filters" onclick="toggleFilterPanel()" aria-expanded="false">
               <hexa-icon name="FilterIcon"></hexa-icon>
-              Filter
+              <span data-i18n="filter.toggle">Filter</span>
               <hexa-icon name="ChevronDownIcon" class="caret"></hexa-icon>
             </button>
 
             <form class="filters" id="filterForm" autocomplete="off" onsubmit="event.preventDefault();applyFilters()" hidden>
-              <div class="hexa-field">
-                <span class="hexa-label">Status</span>
-                <div class="dropdown" id="statusDropdown">
-                  <button type="button" class="dropdown-trigger" data-track="filter-open-status" onclick="toggleDropdown('statusDropdown')">
-                    <span id="statusLabel" class="placeholder">All statuses</span>
-                    <hexa-icon name="ChevronDownIcon"></hexa-icon>
-                  </button>
-                  <div class="dropdown-panel" id="statusPanel"></div>
+              <div class="filters-row">
+                <div class="hexa-field">
+                  <span class="hexa-label" data-i18n="filter.status">Status</span>
+                  <div class="dropdown" id="statusDropdown">
+                    <button type="button" class="dropdown-trigger" data-track="filter-open-status" onclick="toggleDropdown('statusDropdown')">
+                      <span id="statusLabel" class="placeholder">All statuses</span>
+                      <hexa-icon name="ChevronDownIcon"></hexa-icon>
+                    </button>
+                    <div class="dropdown-panel" id="statusPanel"></div>
+                  </div>
+                </div>
+                <div class="hexa-field">
+                  <span class="hexa-label" data-i18n="filter.rule">Business rule</span>
+                  <div class="dropdown" id="ruleDropdown">
+                    <button type="button" class="dropdown-trigger" data-track="filter-open-rule" onclick="toggleDropdown('ruleDropdown')">
+                      <span id="ruleLabel" class="placeholder">All rules</span>
+                      <hexa-icon name="ChevronDownIcon"></hexa-icon>
+                    </button>
+                    <div class="dropdown-panel" id="rulePanel"></div>
+                  </div>
                 </div>
               </div>
-              <div class="hexa-field">
-                <span class="hexa-label">Business rule</span>
-                <div class="dropdown" id="ruleDropdown">
-                  <button type="button" class="dropdown-trigger" data-track="filter-open-rule" onclick="toggleDropdown('ruleDropdown')">
-                    <span id="ruleLabel" class="placeholder">All rules</span>
-                    <hexa-icon name="ChevronDownIcon"></hexa-icon>
-                  </button>
-                  <div class="dropdown-panel" id="rulePanel"></div>
+              <div class="filters-row">
+                <div class="hexa-field">
+                  <span class="hexa-label" data-i18n="filter.poc">POC</span>
+                  <div class="dropdown" id="pocDropdown">
+                    <button type="button" class="dropdown-trigger" data-track="filter-open-poc" onclick="toggleDropdown('pocDropdown')">
+                      <span id="pocLabel" class="placeholder">All POCs</span>
+                      <hexa-icon name="ChevronDownIcon"></hexa-icon>
+                    </button>
+                    <div class="dropdown-panel" id="pocPanel"></div>
+                  </div>
+                </div>
+                <div class="hexa-field">
+                  <span class="hexa-label" data-i18n="filter.retailer">Retailer</span>
+                  <div class="dropdown" id="retailerDropdown">
+                    <button type="button" class="dropdown-trigger" data-track="filter-open-retailer" onclick="toggleDropdown('retailerDropdown')">
+                      <span id="retailerLabel" class="placeholder">All retailers</span>
+                      <hexa-icon name="ChevronDownIcon"></hexa-icon>
+                    </button>
+                    <div class="dropdown-panel" id="retailerPanel"></div>
+                  </div>
                 </div>
               </div>
-              <div class="hexa-field">
-                <span class="hexa-label">POC</span>
-                <div class="dropdown" id="pocDropdown">
-                  <button type="button" class="dropdown-trigger" data-track="filter-open-poc" onclick="toggleDropdown('pocDropdown')">
-                    <span id="pocLabel" class="placeholder">All POCs</span>
-                    <hexa-icon name="ChevronDownIcon"></hexa-icon>
-                  </button>
-                  <div class="dropdown-panel" id="pocPanel"></div>
+              <div class="filters-row">
+                <div class="hexa-field">
+                  <span class="hexa-label" data-i18n="filter.poNumber">PO number</span>
+                  <span class="hexa-input-wrap">
+                    <hexa-icon name="SearchIcon"></hexa-icon>
+                    <input class="hexa-input" id="poInput" data-i18n-placeholder="filter.poPlaceholder" placeholder="e.g. 12345678" inputmode="numeric" />
+                  </span>
+                </div>
+                <div class="hexa-field">
+                  <span class="hexa-label" data-i18n="filter.beesOrder">BEES order number</span>
+                  <span class="hexa-input-wrap">
+                    <hexa-icon name="SearchIcon"></hexa-icon>
+                    <input class="hexa-input" id="beesInput" data-i18n-placeholder="filter.beesPlaceholder" placeholder="e.g. BEES-1234567890" />
+                  </span>
                 </div>
               </div>
-              <div class="hexa-field">
-                <span class="hexa-label">PO number</span>
-                <span class="hexa-input-wrap">
-                  <hexa-icon name="SearchIcon"></hexa-icon>
-                  <input class="hexa-input" id="poInput" placeholder="e.g. 12345678" inputmode="numeric" />
-                </span>
-              </div>
-              <div class="hexa-field">
-                <span class="hexa-label">BEES order number</span>
-                <span class="hexa-input-wrap">
-                  <hexa-icon name="SearchIcon"></hexa-icon>
-                  <input class="hexa-input" id="beesInput" placeholder="e.g. BEES-1234567890" />
-                </span>
-              </div>
-              <div class="hexa-field">
-                <span class="hexa-label">Value</span>
-                <div class="period-row">
-                  <span class="hexa-input-wrap"><input class="hexa-input" id="valueMin" type="number" min="0" step="0.01" placeholder="Min" /></span>
-                  <span class="text-fg-neutral-tertiary">→</span>
-                  <span class="hexa-input-wrap"><input class="hexa-input" id="valueMax" type="number" min="0" step="0.01" placeholder="Max" /></span>
+              <div class="filters-row">
+                <div class="hexa-field">
+                  <span class="hexa-label" data-i18n="filter.receiveDate">Receive date (max 90 days · default last 30 days)</span>
+                  <div class="period-row">
+                    <span class="hexa-input-wrap"><input class="hexa-input" id="dateFrom" type="date" /></span>
+                    <span class="text-fg-neutral-tertiary">→</span>
+                    <span class="hexa-input-wrap"><input class="hexa-input" id="dateTo" type="date" /></span>
+                  </div>
                 </div>
-              </div>
-              <div class="hexa-field hexa-field--wide">
-                <span class="hexa-label">Receive date (max 90 days · default last 30 days)</span>
-                <div class="period-row">
-                  <span class="hexa-input-wrap"><input class="hexa-input" id="dateFrom" type="date" /></span>
-                  <span class="text-fg-neutral-tertiary">→</span>
-                  <span class="hexa-input-wrap"><input class="hexa-input" id="dateTo" type="date" /></span>
-                </div>
-              </div>
-              <div class="hexa-field hexa-field--wide">
-                <span class="hexa-label">Expiration date</span>
-                <div class="period-row">
-                  <span class="hexa-input-wrap"><input class="hexa-input" id="expirationFrom" type="date" /></span>
-                  <span class="text-fg-neutral-tertiary">→</span>
-                  <span class="hexa-input-wrap"><input class="hexa-input" id="expirationTo" type="date" /></span>
+                <div class="hexa-field">
+                  <span class="hexa-label" data-i18n="filter.expirationDate">Expiration date</span>
+                  <div class="period-row">
+                    <span class="hexa-input-wrap"><input class="hexa-input" id="expirationFrom" type="date" /></span>
+                    <span class="text-fg-neutral-tertiary">→</span>
+                    <span class="hexa-input-wrap"><input class="hexa-input" id="expirationTo" type="date" /></span>
+                  </div>
                 </div>
               </div>
               <div class="filter-actions">
                 <div class="left">
                   <button type="submit" id="applyBtn" class="hexa-btn hexa-btn--primary" data-track="cta-apply-filters">
                     <hexa-icon name="FilterIcon"></hexa-icon>
-                    Apply filters
+                    <span data-i18n="filter.apply">Apply filters</span>
                   </button>
-                  <button type="button" class="hexa-btn hexa-btn--tertiary" data-track="cta-clear-filters" onclick="clearFilters()">Clear all</button>
+                  <button type="button" class="hexa-btn hexa-btn--tertiary" data-track="cta-clear-filters" onclick="clearFilters()"><span data-i18n="filter.clearAll">Clear all</span></button>
                 </div>
                 <div class="text-body-xs text-fg-neutral-tertiary" id="periodHint"></div>
               </div>
@@ -251,15 +272,15 @@
           <div class="bulk-bar" id="bulkBar">
             <label class="bulk-select-all">
               <input type="checkbox" id="bulkSelectAll" data-track="bulk-select-all" onchange="toggleSelectAllOnPage(this.checked)" />
-              <span id="bulkSelectAllLabel">Select all on this page</span>
+              <span id="bulkSelectAllLabel" data-i18n="bulk.selectAll">Select all on this page</span>
             </label>
             <span class="bulk-rule-hint text-body-xs text-fg-neutral-tertiary" id="bulkRuleHint"></span>
             <div class="bulk-actions">
               <span class="bulk-count" id="bulkCount">0 selected</span>
-              <button type="button" class="hexa-btn hexa-btn--tertiary" id="bulkClearBtn" data-track="bulk-clear" onclick="clearSelection()" disabled>Clear selection</button>
+              <button type="button" class="hexa-btn hexa-btn--tertiary" id="bulkClearBtn" data-track="bulk-clear" onclick="clearSelection()" disabled><span data-i18n="bulk.clearSelection">Clear selection</span></button>
               <button type="button" class="hexa-btn hexa-btn--primary" id="bulkReprocessBtn" data-track="cta-bulk-reprocess" onclick="reprocessSelected()" disabled>
                 <hexa-icon name="SyncIcon"></hexa-icon>
-                <span id="bulkReprocessLabel">Reprocess selected</span>
+                <span id="bulkReprocessLabel" data-i18n="bulk.reprocess">Reprocess selected</span>
               </button>
             </div>
           </div>
@@ -272,9 +293,9 @@
           <template id="emptyTpl">
             <div class="hexa-empty">
               <hexa-illustration name="NoSearchResults"></hexa-illustration>
-              <h3>No orders match your filters</h3>
-              <p>Try widening the period or clearing some filters.</p>
-              <button class="hexa-btn hexa-btn--secondary" data-track="cta-empty-clear" onclick="clearFilters()">Clear all filters</button>
+              <h3 data-i18n="empty.title">No orders match your filters</h3>
+              <p data-i18n="empty.body">Try widening the period or clearing some filters.</p>
+              <button class="hexa-btn hexa-btn--secondary" data-track="cta-empty-clear" onclick="clearFilters()"><span data-i18n="empty.clear">Clear all filters</span></button>
             </div>
           </template>
         </section>
@@ -288,20 +309,21 @@
                   <hexa-icon name="HomeIcon"></hexa-icon>
                 </a>
                 <hexa-icon name="ChevronRightIcon" class="crumb-sep"></hexa-icon>
-                <a href="#orders" class="crumb" data-track="item-breadcrumb-orders">EDI Central Tracking</a>
+                <a href="#orders" class="crumb" data-track="item-breadcrumb-orders" data-i18n="page.ediTitle">EDI Central Tracking</a>
                 <hexa-icon name="ChevronRightIcon" class="crumb-sep"></hexa-icon>
-                <span class="crumb crumb--current" aria-current="page">Order details</span>
+                <span class="crumb crumb--current" aria-current="page" data-i18n="page.orderDetails">Order details</span>
               </nav>
               <div class="order-details-band-row">
-                <h1 class="order-details-title">Order details</h1>
+                <h1 class="order-details-title" data-i18n="page.orderDetails">Order details</h1>
                 <div class="order-details-band-actions">
+                  <button type="button" class="band-btn band-btn--primary" id="itemPageReprocessBtn" hidden
+                    data-track="item-page-reprocess-open" onclick="openReprocessModal()">
+                    <hexa-icon name="SyncIcon"></hexa-icon>
+                    <span id="itemPageReprocessBtnLabel">Reprocess</span>
+                  </button>
                   <button type="button" class="band-btn band-btn--ghost" data-track="item-add-note" onclick="openNoteDialog(view.itemPageOrderId)">
                     <hexa-icon name="EditIcon"></hexa-icon>
-                    Add resolution note
-                  </button>
-                  <button type="button" class="band-btn band-btn--primary" id="itemPageActionBtn" data-track="item-take-action" onclick="openDrawer(view.itemPageOrderId)">
-                    <hexa-icon name="SyncIcon"></hexa-icon>
-                    <span id="itemPageActionLabel">Take action</span>
+                    <span data-i18n="details.addNote">Add resolution note</span>
                   </button>
                 </div>
               </div>
@@ -311,6 +333,20 @@
           <div class="order-details-body">
             <div class="order-details-card">
               <div class="order-details-summary" id="itemPageSummary"></div>
+            </div>
+
+            <div class="order-details-card order-timeline-card" id="itemPageTimeline" hidden>
+              <button type="button" class="order-timeline-toggle" id="itemTimelineToggle"
+                data-track="item-timeline-toggle" onclick="toggleItemTimeline()" aria-expanded="false"
+                aria-controls="itemTimelinePanel">
+                <hexa-icon name="HistoryIcon"></hexa-icon>
+                <span class="order-timeline-toggle-label" data-i18n="details.timeline">Order timeline</span>
+                <span class="order-timeline-count" id="itemTimelineCount"></span>
+                <hexa-icon name="ChevronDownIcon" class="caret"></hexa-icon>
+              </button>
+              <div class="order-timeline-panel" id="itemTimelinePanel" hidden>
+                <ul class="timeline" id="itemTimelineList"></ul>
+              </div>
             </div>
 
             <div class="item-summary-cards" id="itemSummaryCards"></div>
@@ -328,7 +364,7 @@
   <aside id="orderDrawer" class="order-drawer" role="dialog" aria-modal="false" aria-labelledby="drawerTitle" hidden>
     <header>
       <div>
-        <div class="text-body-xs text-fg-neutral-tertiary" style="text-transform:uppercase;letter-spacing:.05em">Order detail</div>
+        <div class="text-body-xs text-fg-neutral-tertiary" style="text-transform:uppercase;letter-spacing:.05em" id="drawerEyebrow" data-i18n="drawer.eyebrow">Order detail</div>
         <h3 id="drawerTitle" style="margin:4px 0 0">—</h3>
       </div>
       <button class="hexa-icon-btn" data-track="drawer-close" onclick="closeDrawer()" aria-label="Close">
@@ -341,25 +377,88 @@
     </footer>
   </aside>
 
+  <!-- REPROCESS MODAL (details page) -->
+  <dialog id="reprocessModal" class="hexa-dialog" aria-labelledby="reprocessModalTitle">
+    <div class="hexa-dialog-header">
+      <h3 id="reprocessModalTitle" style="margin:0">Reprocess order</h3>
+      <p class="text-body-sm text-fg-neutral-secondary" id="reprocessModalSubtitle" style="margin:var(--hexa-space-sm) 0 0"></p>
+    </div>
+    <div class="hexa-dialog-body" id="reprocessModalBody"></div>
+    <div class="hexa-dialog-footer" id="reprocessModalFooter"></div>
+  </dialog>
+
+  <!-- UPC FIX MODAL (details page — per line) -->
+  <dialog id="upcFixModal" class="hexa-dialog hexa-dialog--upc" aria-labelledby="upcFixModalTitle">
+    <div class="hexa-dialog-header">
+      <h3 id="upcFixModalTitle" style="margin:0">Choose correct UPC</h3>
+      <p class="text-body-sm text-fg-neutral-secondary" id="upcFixModalSubtitle" style="margin:var(--hexa-space-sm) 0 0"></p>
+    </div>
+    <div class="hexa-dialog-body" id="upcFixModalBody"></div>
+    <div class="hexa-dialog-footer" id="upcFixModalFooter"></div>
+  </dialog>
+
   <script>
   // ============================================================
   // STATE — aligned to HLR BEESEDI-51860
   // ============================================================
   const D = window.EDI_DATA;
+  const t = (...args) => I18n.t(...args);
+
+  function toggleLangMenu(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('langMenu');
+    const btn = document.getElementById('langToggle');
+    const open = menu.hidden;
+    menu.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    if (open) HT.track('lang_menu_opened', { lang: I18n.getLang() });
+  }
+
+  function closeLangMenu() {
+    const menu = document.getElementById('langMenu');
+    const btn = document.getElementById('langToggle');
+    if (!menu || menu.hidden) return;
+    menu.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+  }
+
+  function setLanguage(lang) {
+    I18n.setLang(lang);
+    closeLangMenu();
+    HT.track('language_changed', { lang });
+  }
+
+  window.onLanguageChanged = function () {
+    renderAllPanels();
+    syncDropdownLabels();
+    renderTable();
+    if (view.openOrderId) {
+      const o = D.orders.find((x) => x.id === view.openOrderId);
+      if (o) populateDrawer(o);
+    }
+    if (view.itemPageOrderId) renderItemPage(view.itemPageOrderId);
+    const modal = document.getElementById('reprocessModal');
+    if (modal && modal.open && view.itemPageOrderId) openReprocessModal();
+  };
+
+  document.addEventListener('click', (e) => {
+    if (!document.getElementById('langSwitcher')?.contains(e.target)) closeLangMenu();
+  });
+
+  I18n.applyStaticLabels();
 
   // Filter dimensions aligned to table columns.
-  const FILTER_DIMS = ['statuses', 'rules', 'pocs'];
+  const FILTER_DIMS = ['statuses', 'rules', 'pocs', 'chains'];
   const emptyFilterState = () => ({
     statuses: new Set(),
     rules: new Set(),
     pocs: new Set(),
+    chains: new Set(),
   });
   const draft   = emptyFilterState();
   const applied = Object.assign(emptyFilterState(), {
     poQuery: '',
     beesQuery: '',
-    valueMin: '',
-    valueMax: '',
     expirationFrom: '',
     expirationTo: '',
     dateFrom: null,
@@ -372,6 +471,11 @@
     page: 1,
     pageSize: 10,
     selected: new Set(),
+    noteComposerOpen: false,
+    itemTimelineOpen: false,
+    itemTimelineOrderId: null,
+    itemUpcModalLine: null,
+    upcModalPickedSku: '',
     // For rule-specific drawer actions:
     drawerSelectedUpcs: {}, // { lineNumber: 'new-upc-string' }
     drawerPriceChoice: 'bees', // 'bees' | 'requested'
@@ -382,7 +486,23 @@
   const REPROCESSABLE_STATUSES = new Set(['BLOCKED', 'REJECTED']);
   const isReprocessable = (o) => REPROCESSABLE_STATUSES.has(o.statusId);
 
-  // Replacement UPCs offered when the UPC_NOT_FOUND blocking rule fires.
+  // BEES catalog lookup for UPC_NOT_FOUND resolution.
+  function catalogProduct(sku) {
+    return D.CATALOG.find((c) => c.sku === sku) || null;
+  }
+
+  function searchCatalog(query, excludeSku, limit = 30) {
+    const q = (query || '').trim().toLowerCase();
+    if (q.length < 2) return [];
+    return D.CATALOG.filter((c) => {
+      if (c.sku === excludeSku) return false;
+      return c.sku.includes(q)
+        || c.name.toLowerCase().includes(q)
+        || c.family.toLowerCase().includes(q);
+    }).slice(0, limit);
+  }
+
+  // Legacy helper — drawer still surfaces a short list; modal uses full search.
   function alternativeUpcs(lineSku) {
     return D.CATALOG.filter((c) => c.sku !== lineSku).slice(0, 4).map((c) => ({ sku: c.sku, name: c.name }));
   }
@@ -390,14 +510,28 @@
   function fmtMoney(n) { return '$' + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   function fmtDate(iso) {
     const d = new Date(iso);
-    return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    const loc = I18n.locale();
+    return d.toLocaleDateString(loc, { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' });
   }
   function fmtDateOnly(iso) {
     const d = new Date(iso);
-    return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+    return d.toLocaleDateString(I18n.locale(), { day: '2-digit', month: 'short', year: 'numeric' });
   }
   function isoDay(d) { return d.toISOString().slice(0, 10); }
   function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+  function emptyDash() {
+    return '<span class="text-fg-neutral-tertiary">—</span>';
+  }
+
+  function beesOrderNumberHtml(o, source) {
+    if (!o.beesOrderNumber) {
+      return emptyDash();
+    }
+    return `<a href="#" class="bees-order-link mono" data-track="bees-order-link-${source}"
+      onclick="event.preventDefault(); event.stopPropagation()"
+      title="${escapeHtml(t('drawer.beesHistory'))}">${escapeHtml(o.beesOrderNumber)}</a>`;
+  }
 
   // ============================================================
   // INIT — period defaults: last 30 days (default), max 90 days (HLR FR-2)
@@ -411,7 +545,7 @@
     document.getElementById('dateFrom').max = isoDay(today);
     applied.dateFrom = isoDay(from);
     applied.dateTo = isoDay(today);
-    document.getElementById('periodHint').textContent = 'Maximum interval: 90 days · default: last 30 days';
+    document.getElementById('periodHint').textContent = t('filter.periodHint');
   })();
 
   // ----------------------------------------------------------------
@@ -427,17 +561,17 @@
   function renderStatusPanel() {
     document.getElementById('statusPanel').innerHTML = D.STATUSES.map((s) => `
       <label class="opt"><input type="checkbox" value="${s.id}" ${draft.statuses.has(s.id) ? 'checked' : ''} onchange="toggleDraft('statuses', this.value, this.checked)"/>
-        <span class="hexa-status-badge hexa-status-badge--${s.tone}">${s.label}</span>
+        <span class="hexa-status-badge hexa-status-badge--${s.tone}">${I18n.statusLabel(s.id)}</span>
       </label>
     `).join('');
   }
   function renderRulePanel() {
-    const blockedRules = D.BLOCKING_RULES.map((r) => optionRow(r.code, escapeHtml(r.label), draft.rules.has(r.code), `toggleDraft('rules','${r.code}', this.checked)`));
-    const rejectedRules = D.REJECTING_RULES.map((r) => optionRow(r.code, escapeHtml(r.label), draft.rules.has(r.code), `toggleDraft('rules','${r.code}', this.checked)`));
+    const blockedRules = D.BLOCKING_RULES.map((r) => optionRow(r.code, escapeHtml(I18n.ruleLabel(r.code)), draft.rules.has(r.code), `toggleDraft('rules','${r.code}', this.checked)`));
+    const rejectedRules = D.REJECTING_RULES.map((r) => optionRow(r.code, escapeHtml(I18n.ruleLabel(r.code)), draft.rules.has(r.code), `toggleDraft('rules','${r.code}', this.checked)`));
     document.getElementById('rulePanel').innerHTML = `
-      <div class="opt-group-label">Blocked</div>
+      <div class="opt-group-label">${t('filter.groupBlocked')}</div>
       ${blockedRules.join('')}
-      <div class="opt-group-label">Rejected</div>
+      <div class="opt-group-label">${t('filter.groupRejected')}</div>
       ${rejectedRules.join('')}
     `;
   }
@@ -448,7 +582,7 @@
       <div class="search">
         <span class="hexa-input-wrap">
           <hexa-icon name="SearchIcon"></hexa-icon>
-          <input class="hexa-input" placeholder="Search POC name, id, city…" oninput="renderPocPanel(this.value)" value="${escapeHtml(query || '')}" />
+          <input class="hexa-input" placeholder="${escapeHtml(t('filter.pocSearch'))}" oninput="renderPocPanel(this.value)" value="${escapeHtml(query || '')}" />
         </span>
       </div>
       ${list.map((p) => `
@@ -457,14 +591,19 @@
           <span style="flex:1">${escapeHtml(p.name)}</span>
           <span class="text-body-xs text-fg-neutral-tertiary">${p.id} · ${escapeHtml(p.city)}</span>
         </label>
-      `).join('') || '<div class="text-body-sm text-fg-neutral-tertiary p-sm">No POC matches.</div>'}
+      `).join('') || `<div class="text-body-sm text-fg-neutral-tertiary p-sm">${t('filter.pocNoMatch')}</div>`}
     `;
+  }
+  function renderRetailerPanel() {
+    document.getElementById('retailerPanel').innerHTML = D.CHAINS.map((c) =>
+      optionRow(c.code, escapeHtml(c.name), draft.chains.has(c.code), `toggleDraft('chains','${c.code}', this.checked)`)
+    ).join('');
   }
   function renderVendorPanel() { /* removed */ }
   function renderRegionPanel() { /* removed */ }
   function renderRepPanel() { /* removed */ }
   function renderAllPanels() {
-    renderStatusPanel(); renderRulePanel(); renderPocPanel('');
+    renderStatusPanel(); renderRulePanel(); renderPocPanel(''); renderRetailerPanel();
   }
   renderAllPanels();
 
@@ -490,15 +629,11 @@
     const src = target === 'draft' ? {
       poQuery: document.getElementById('poInput').value.trim(),
       beesQuery: document.getElementById('beesInput').value.trim(),
-      valueMin: document.getElementById('valueMin').value.trim(),
-      valueMax: document.getElementById('valueMax').value.trim(),
       expirationFrom: document.getElementById('expirationFrom').value,
       expirationTo: document.getElementById('expirationTo').value,
     } : {
       poQuery: applied.poQuery,
       beesQuery: applied.beesQuery,
-      valueMin: applied.valueMin,
-      valueMax: applied.valueMax,
       expirationFrom: applied.expirationFrom,
       expirationTo: applied.expirationTo,
     };
@@ -507,8 +642,6 @@
   function syncScalarInputsFromApplied() {
     document.getElementById('poInput').value = applied.poQuery;
     document.getElementById('beesInput').value = applied.beesQuery;
-    document.getElementById('valueMin').value = applied.valueMin;
-    document.getElementById('valueMax').value = applied.valueMax;
     document.getElementById('expirationFrom').value = applied.expirationFrom;
     document.getElementById('expirationTo').value = applied.expirationTo;
   }
@@ -516,18 +649,17 @@
     document.getElementById('applyBtn').classList.toggle('is-dirty', isDirty());
   }
 
-  function labelForCount(count, singular, plural, allLabel) {
-    return count ? (count + ' ' + (count > 1 ? plural : singular)) : allLabel;
-  }
   function syncDropdownLabels() {
-    const set = (id, count, sing, plur, allLabel) => {
+    const set = (id, count, singKey, plurKey, allKey) => {
       const el = document.getElementById(id);
       el.className = count ? '' : 'placeholder';
-      el.textContent = labelForCount(count, sing, plur, allLabel);
+      if (!count) el.textContent = t(allKey);
+      else el.textContent = t(count > 1 ? plurKey : singKey, { count });
     };
-    set('statusLabel',  draft.statuses.size,  'status',  'statuses', 'All statuses');
-    set('ruleLabel',    draft.rules.size,     'rule',    'rules',    'All rules');
-    set('pocLabel',     draft.pocs.size,      'POC',     'POCs',     'All POCs');
+    set('statusLabel',  draft.statuses.size,  'filter.statusCount',  'filter.statusesCount',  'filter.allStatuses');
+    set('ruleLabel',    draft.rules.size,     'filter.ruleCount',    'filter.rulesCount',    'filter.allRules');
+    set('pocLabel',     draft.pocs.size,      'filter.pocCount',     'filter.pocsCount',     'filter.allPocs');
+    set('retailerLabel', draft.chains.size,   'filter.retailerCount','filter.retailersCount','filter.allRetailers');
   }
   syncDropdownLabels();
 
@@ -580,7 +712,7 @@
     if (diffDays > 90) {
       const capped = new Date(from.getTime() + 90 * 86400000);
       toEl.value = isoDay(capped);
-      flashHint('Period capped at 90 days (ops scope).');
+      flashHint(t('filter.periodCapped'));
     }
     applied.dateFrom = fromEl.value;
     applied.dateTo = toEl.value;
@@ -588,26 +720,27 @@
   }
   function flashHint(msg) {
     const el = document.getElementById('periodHint');
-    const original = el.textContent;
+    const original = t('filter.periodHint');
+    el.dataset.flash = '1';
     el.textContent = msg;
     el.style.color = 'var(--hexa-status-warning)';
-    setTimeout(() => { el.textContent = original; el.style.color = ''; }, 2400);
+    setTimeout(() => {
+      delete el.dataset.flash;
+      el.textContent = original;
+      el.style.color = '';
+    }, 2400);
   }
   document.getElementById('dateFrom').addEventListener('change', () => { enforcePeriodCap(); view.page = 1; renderTable(); });
   document.getElementById('dateTo').addEventListener('change', () => { enforcePeriodCap(); view.page = 1; renderTable(); });
 
   document.getElementById('poInput').addEventListener('input', () => { markDirty(); });
   document.getElementById('beesInput').addEventListener('input', () => { markDirty(); });
-  document.getElementById('valueMin').addEventListener('input', () => { markDirty(); });
-  document.getElementById('valueMax').addEventListener('input', () => { markDirty(); });
   document.getElementById('expirationFrom').addEventListener('change', () => { markDirty(); });
   document.getElementById('expirationTo').addEventListener('change', () => { markDirty(); });
 
   function applyScalarFilters() {
     applied.poQuery = document.getElementById('poInput').value.trim();
     applied.beesQuery = document.getElementById('beesInput').value.trim();
-    applied.valueMin = document.getElementById('valueMin').value.trim();
-    applied.valueMax = document.getElementById('valueMax').value.trim();
     applied.expirationFrom = document.getElementById('expirationFrom').value;
     applied.expirationTo = document.getElementById('expirationTo').value;
   }
@@ -623,7 +756,6 @@
       filter_count: dims.length,
       has_po: !!applied.poQuery,
       has_bees: !!applied.beesQuery,
-      has_value: !!(applied.valueMin || applied.valueMax),
       has_expiration: !!(applied.expirationFrom || applied.expirationTo),
       days: Math.round((new Date(applied.dateTo) - new Date(applied.dateFrom)) / 86400000) + 1,
     });
@@ -634,8 +766,6 @@
     FILTER_DIMS.forEach((d) => { draft[d].clear(); applied[d].clear(); });
     applied.poQuery = '';
     applied.beesQuery = '';
-    applied.valueMin = '';
-    applied.valueMax = '';
     applied.expirationFrom = '';
     applied.expirationTo = '';
     syncScalarInputsFromApplied();
@@ -660,18 +790,15 @@
     const toTs = applied.dateTo ? new Date(applied.dateTo).getTime() + 86400000 - 1 : Infinity;
     const expFromTs = applied.expirationFrom ? new Date(applied.expirationFrom).getTime() : 0;
     const expToTs = applied.expirationTo ? new Date(applied.expirationTo).getTime() + 86400000 - 1 : Infinity;
-    const minValue = applied.valueMin !== '' ? Number(applied.valueMin) : null;
-    const maxValue = applied.valueMax !== '' ? Number(applied.valueMax) : null;
     return D.orders.filter((o) => {
       if (!opts.ignoreStatus && applied.statuses.size && !applied.statuses.has(o.statusId)) return false;
       if (applied.rules.size && (!o.ruleCode || !applied.rules.has(o.ruleCode))) return false;
       if (applied.pocs.size && !applied.pocs.has(o.pocId)) return false;
+      if (applied.chains.size && !applied.chains.has(o.chainCode)) return false;
       if (applied.poQuery && !o.poNumber.includes(applied.poQuery)) return false;
       if (applied.beesQuery) {
         if (!o.beesOrderNumber || !o.beesOrderNumber.toLowerCase().includes(applied.beesQuery.toLowerCase())) return false;
       }
-      if (minValue !== null && !Number.isNaN(minValue) && o.totalValue < minValue) return false;
-      if (maxValue !== null && !Number.isNaN(maxValue) && o.totalValue > maxValue) return false;
       const t = new Date(o.receivedAt).getTime();
       if (t < fromTs || t > toTs) return false;
       if (applied.expirationFrom || applied.expirationTo) {
@@ -709,16 +836,6 @@
     renderTable();
     HT.track('filter_chip_removed', { filter: 'bees_order_number' });
   }
-  function clearValueFilter() {
-    document.getElementById('valueMin').value = '';
-    document.getElementById('valueMax').value = '';
-    applied.valueMin = '';
-    applied.valueMax = '';
-    view.page = 1;
-    markDirty();
-    renderTable();
-    HT.track('filter_chip_removed', { filter: 'value' });
-  }
   function clearExpirationFilter() {
     document.getElementById('expirationFrom').value = '';
     document.getElementById('expirationTo').value = '';
@@ -738,28 +855,24 @@
     const chips = [];
     applied.statuses.forEach((s) => {
       const st = D.STATUSES.find((x) => x.id === s);
-      if (st) chips.push(chipFor('statuses', s, st.label));
+      if (st) chips.push(chipFor('statuses', s, I18n.statusLabel(s)));
     });
     applied.rules.forEach((r) => {
       const rule = D.RULE_BY_CODE[r];
-      if (rule) chips.push(chipFor('rules', r, rule.label));
+      if (rule) chips.push(chipFor('rules', r, I18n.ruleLabel(r)));
     });
     if (applied.pocs.size) {
       chips.push(`<span class="hexa-chip" style="cursor:default">${applied.pocs.size} POC${applied.pocs.size > 1 ? 's' : ''} selected</span>`);
     }
+    applied.chains.forEach((c) => {
+      const ch = D.CHAINS.find((x) => x.code === c);
+      if (ch) chips.push(chipFor('chains', c, ch.name));
+    });
     if (applied.poQuery) {
       chips.push(`<button class="hexa-chip" data-track="chip-remove-po" onclick="clearPoQuery()"><hexa-icon name="CloseIcon"></hexa-icon> PO: ${escapeHtml(applied.poQuery)}</button>`);
     }
     if (applied.beesQuery) {
       chips.push(`<button class="hexa-chip" data-track="chip-remove-bees" onclick="clearBeesQuery()"><hexa-icon name="CloseIcon"></hexa-icon> BEES: ${escapeHtml(applied.beesQuery)}</button>`);
-    }
-    if (applied.valueMin || applied.valueMax) {
-      const label = applied.valueMin && applied.valueMax
-        ? `Value: ${applied.valueMin} – ${applied.valueMax}`
-        : applied.valueMin
-          ? `Value ≥ ${applied.valueMin}`
-          : `Value ≤ ${applied.valueMax}`;
-      chips.push(`<button class="hexa-chip" data-track="chip-remove-value" onclick="clearValueFilter()"><hexa-icon name="CloseIcon"></hexa-icon> ${escapeHtml(label)}</button>`);
     }
     if (applied.expirationFrom || applied.expirationTo) {
       const label = applied.expirationFrom && applied.expirationTo
@@ -808,13 +921,18 @@
 
   function statusPill(o) {
     const map = { success: 'is-success', error: 'is-error', info: 'is-info', blocked: 'is-blocked' };
-    return `<span class="status-pill ${map[o.statusTone] || 'is-neutral'}">${o.statusLabel}</span>`;
+    return `<span class="status-pill ${map[o.statusTone] || 'is-neutral'}">${I18n.statusLabel(o.statusId)}</span>`;
   }
-  function ruleBadge(ruleCode, source) {
-    if (!ruleCode) return '<span class="text-fg-neutral-tertiary">—</span>';
+  function ruleBadge(ruleCode, source, interactive = true) {
+    if (!ruleCode) return emptyDash();
     const r = D.RULE_BY_CODE[ruleCode];
     if (!r) return '—';
-    return `<button class="rule-badge rule-badge--${r.status.toLowerCase()}" data-track="rule-badge-click" onclick="event.stopPropagation();filterByRule('${r.code}','${source || 'row'}')" title="Filter the list by this rule">${escapeHtml(r.label)}</button>`;
+    const label = escapeHtml(I18n.ruleLabel(r.code));
+    const cls = `rule-badge rule-badge--${r.status.toLowerCase()}`;
+    if (!interactive) {
+      return `<span class="${cls}">${label}</span>`;
+    }
+    return `<button class="${cls}" data-track="rule-badge-click" onclick="event.stopPropagation();filterByRule('${r.code}','${source || 'row'}')" title="${escapeHtml(t('table.ruleFilterTitle'))}">${label}</button>`;
   }
 
   // ============================================================
@@ -829,28 +947,29 @@
     const totalForRate = orders.length || 1;
     const acceptanceRate = Math.round((counts.ACCEPTED / totalForRate) * 100);
     const cards = [
-      { id: 'ACCEPTED', label: 'Accepted', tone: 'success', count: counts.ACCEPTED, filterId: 'ACCEPTED' },
-      { id: 'BLOCKED',  label: 'Blocked',  tone: 'blocked', count: counts.BLOCKED,  filterId: 'BLOCKED'  },
-      { id: 'REJECTED', label: 'Rejected', tone: 'error',   count: counts.REJECTED, filterId: 'REJECTED' },
-      { id: 'IN_QUEUE', label: 'In queue', tone: 'info',    count: counts.IN_QUEUE, filterId: 'IN_QUEUE' },
+      { id: 'ACCEPTED', tone: 'success', count: counts.ACCEPTED, filterId: 'ACCEPTED' },
+      { id: 'BLOCKED',  tone: 'blocked', count: counts.BLOCKED,  filterId: 'BLOCKED'  },
+      { id: 'REJECTED', tone: 'error',   count: counts.REJECTED, filterId: 'REJECTED' },
+      { id: 'IN_QUEUE', tone: 'info',    count: counts.IN_QUEUE, filterId: 'IN_QUEUE' },
     ];
     document.getElementById('summaryCards').innerHTML = cards.map((c) => {
+      const label = I18n.statusLabel(c.id);
       const isActive = applied.statuses.size === 1 && applied.statuses.has(c.filterId);
       const pct = orders.length ? Math.round((c.count / orders.length) * 100) : 0;
       const extraLine = c.id === 'ACCEPTED'
-        ? `<span class="of">Acceptance rate: <strong>${acceptanceRate}%</strong></span>`
-        : `<span class="of">${c.count.toLocaleString()} of ${orders.length.toLocaleString()}</span>`;
+        ? `<span class="of">${t('summary.acceptanceRate')} <strong>${acceptanceRate}%</strong></span>`
+        : `<span class="of">${t('summary.of', { count: c.count.toLocaleString(), total: orders.length.toLocaleString() })}</span>`;
       return `
-        <div class="summary-card ${isActive ? 'is-active' : ''}" title="${c.label} — ${c.count.toLocaleString()} of ${orders.length.toLocaleString()}">
+        <div class="summary-card ${isActive ? 'is-active' : ''}" title="${label} — ${t('summary.of', { count: c.count.toLocaleString(), total: orders.length.toLocaleString() })}">
           <div class="header-row">
             <span class="label">
               <span class="dot dot-${c.tone}"></span>
-              <span class="label-text">${c.label}</span>
+              <span class="label-text">${label}</span>
             </span>
             <button type="button" class="filter-link ${isActive ? 'is-active' : ''}"
               data-track="summary-card-${c.id.toLowerCase()}"
               onclick="toggleSummaryFilter('${c.filterId}')">
-              ${isActive ? 'Clear' : 'Filter'}
+              ${isActive ? t('summary.clear') : t('summary.filter')}
             </button>
           </div>
           <div class="value-row">
@@ -881,8 +1000,9 @@
     const wrap = document.getElementById('tableWrap');
     if (!orders.length) {
       wrap.innerHTML = '';
-      const tpl = document.getElementById('emptyTpl');
-      wrap.appendChild(tpl.content.cloneNode(true));
+      const empty = document.getElementById('emptyTpl').content.cloneNode(true);
+      empty.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.getAttribute('data-i18n')); });
+      wrap.appendChild(empty);
       document.getElementById('bulkBar').hidden = true;
       return;
     }
@@ -899,18 +1019,18 @@
       const selectable = isReprocessable(o);
       const checked = view.selected.has(o.id);
       const checkboxCell = selectable
-        ? `<label class="cell-select" onclick="event.stopPropagation()" title="Select for bulk reprocess">
+        ? `<label class="cell-select" onclick="event.stopPropagation()" title="${escapeHtml(t('table.selectBulk'))}">
              <input type="checkbox" data-track="row-select-${o.statusId.toLowerCase()}"
                     ${checked ? 'checked' : ''}
                     onchange="toggleRowSelection('${o.id}', this.checked)" />
            </label>`
-        : `<span class="cell-select cell-select--disabled" title="${o.statusLabel} orders can't be reprocessed"></span>`;
+        : `<span class="cell-select cell-select--disabled" title="${escapeHtml(t('table.cantReprocess', { status: I18n.statusLabel(o.statusId) }))}"></span>`;
 
       const actionBtn = selectable
         ? `<button type="button" class="row-action row-action--primary"
                  data-track="row-take-action-${o.statusId.toLowerCase()}"
                  onclick="event.stopPropagation();openDrawer('${o.id}')"
-                 title="Take corrective action">
+                 title="${escapeHtml(t('table.takeAction'))}">
              <hexa-icon name="SyncIcon"></hexa-icon>
            </button>`
         : '';
@@ -931,19 +1051,16 @@
           </div>
           <div class="cell cell-rule">${ruleBadge(o.ruleCode, 'row')}</div>
           <div class="cell cell-po mono">${o.poNumber}</div>
-          <div class="cell cell-bees mono">${o.beesOrderNumber
-              ? o.beesOrderNumber
-              : `<span class="muted">Not yet assigned</span>`}</div>
+          <div class="cell cell-bees">${beesOrderNumberHtml(o, 'row')}</div>
           <div class="cell cell-expiration">${fmtDateOnly(o.expirationDate)}</div>
-          <div class="cell cell-value">${fmtMoney(o.totalValue)}</div>
           <div class="row-actions" onclick="event.stopPropagation()">
+            ${actionBtn}
             <button type="button" class="row-action"
                     data-track="row-summary"
                     onclick="event.stopPropagation();openDrawer('${o.id}')"
-                    title="View order summary">
+                    title="${escapeHtml(t('table.viewSummary'))}">
               <hexa-icon name="InfoIcon"></hexa-icon>
             </button>
-            ${actionBtn}
           </div>
         </div>
       `;
@@ -952,15 +1069,14 @@
     const headerRow = `
       <div class="order-row order-row--head" role="row">
         <div class="cell-select cell-select--head" aria-hidden="true"></div>
-        <div class="cell cell-status">Status</div>
-        <div class="cell cell-date">Receive date</div>
-        <div class="cell cell-account">POC</div>
-        <div class="cell cell-rule">Business rule</div>
-        <div class="cell cell-po">PO number</div>
-        <div class="cell cell-bees">BEES order number</div>
-        <div class="cell cell-expiration">Expiration date</div>
-        <div class="cell cell-value">Value</div>
-        <div class="cell cell-actions">Actions</div>
+        <div class="cell cell-status">${t('table.status')}</div>
+        <div class="cell cell-date">${t('table.receiveDate')}</div>
+        <div class="cell cell-account">${t('table.poc')}</div>
+        <div class="cell cell-rule">${t('table.rule')}</div>
+        <div class="cell cell-po">${t('table.po')}</div>
+        <div class="cell cell-bees">${t('table.bees')}</div>
+        <div class="cell cell-expiration">${t('table.expiration')}</div>
+        <div class="cell cell-actions">${t('table.actions')}</div>
       </div>
     `;
 
@@ -982,24 +1098,24 @@
     let prev = 0;
     for (const n of pageNums) {
       if (n - prev > 1) buttons.push(`<span class="page-ellipsis">…</span>`);
-      buttons.push(`<button class="page-btn ${n === cur ? 'is-current' : ''}" onclick="goToPage(${n})" data-track="pagination-page" aria-label="Page ${n}">${n}</button>`);
+      buttons.push(`<button class="page-btn ${n === cur ? 'is-current' : ''}" onclick="goToPage(${n})" data-track="pagination-page" aria-label="${escapeHtml(t('pagination.page', { n }))}">${n}</button>`);
       prev = n;
     }
     return `
       <div class="pagination">
-        <span class="meta">${(start + 1).toLocaleString()} - ${end.toLocaleString()} of ${total.toLocaleString()}</span>
+        <span class="meta">${t('pagination.range', { start: (start + 1).toLocaleString(), end: end.toLocaleString(), total: total.toLocaleString() })}</span>
         <label class="page-size">
-          Lines per page:
+          ${t('pagination.linesPerPage')}
           <select class="hexa-select" onchange="changePageSize(this.value)">
             ${[10, 25, 50, 100].map(n => `<option value="${n}" ${n === view.pageSize ? 'selected' : ''}>${n}</option>`).join('')}
           </select>
         </label>
         <div class="pages">
-          <button class="page-btn" onclick="goToPage(1)"          ${cur === 1 ? 'disabled' : ''} data-track="pagination-first" aria-label="First page"><hexa-icon name="ChevronDoubleLeftIcon"></hexa-icon></button>
-          <button class="page-btn" onclick="goToPage(${cur - 1})" ${cur === 1 ? 'disabled' : ''} data-track="pagination-prev"  aria-label="Previous page"><hexa-icon name="ChevronLeftIcon"></hexa-icon></button>
+          <button class="page-btn" onclick="goToPage(1)"          ${cur === 1 ? 'disabled' : ''} data-track="pagination-first" aria-label="${escapeHtml(t('pagination.first'))}"><hexa-icon name="ChevronDoubleLeftIcon"></hexa-icon></button>
+          <button class="page-btn" onclick="goToPage(${cur - 1})" ${cur === 1 ? 'disabled' : ''} data-track="pagination-prev"  aria-label="${escapeHtml(t('pagination.prev'))}"><hexa-icon name="ChevronLeftIcon"></hexa-icon></button>
           ${buttons.join('')}
-          <button class="page-btn" onclick="goToPage(${cur + 1})" ${cur === totalPages ? 'disabled' : ''} data-track="pagination-next" aria-label="Next page"><hexa-icon name="ChevronRightIcon"></hexa-icon></button>
-          <button class="page-btn" onclick="goToPage(${totalPages})" ${cur === totalPages ? 'disabled' : ''} data-track="pagination-last" aria-label="Last page"><hexa-icon name="ChevronDoubleRightIcon"></hexa-icon></button>
+          <button class="page-btn" onclick="goToPage(${cur + 1})" ${cur === totalPages ? 'disabled' : ''} data-track="pagination-next" aria-label="${escapeHtml(t('pagination.next'))}"><hexa-icon name="ChevronRightIcon"></hexa-icon></button>
+          <button class="page-btn" onclick="goToPage(${totalPages})" ${cur === totalPages ? 'disabled' : ''} data-track="pagination-last" aria-label="${escapeHtml(t('pagination.last'))}"><hexa-icon name="ChevronDoubleRightIcon"></hexa-icon></button>
         </div>
       </div>
     `;
@@ -1100,6 +1216,89 @@
   }
 
   // ============================================================
+  // ORDER TIMELINE — audit trail + resolution notes (chronological)
+  // ============================================================
+  function buildOrderTimelineEvents(o, { includeNotes = true } = {}) {
+    const events = [];
+    (o.audit || []).forEach((a) => {
+      if (includeNotes && String(a.event).startsWith('Resolution note added')) return;
+      events.push({ kind: 'event', ts: a.ts, event: a.event, actor: a.actor });
+    });
+    if (includeNotes) {
+      (o.notes || []).forEach((n) => {
+        events.push({ kind: 'note', ts: n.ts, category: n.category, body: n.body, author: n.author });
+      });
+    }
+    events.sort((a, b) => new Date(a.ts) - new Date(b.ts));
+    return events;
+  }
+
+  function renderOrderTimelineItems(o, options) {
+    const events = buildOrderTimelineEvents(o, options);
+    if (!events.length) {
+      return `<li class="text-body-sm text-fg-neutral-tertiary">${t('timeline.none')}</li>`;
+    }
+    return events.map((e) => {
+      if (e.kind === 'note') {
+        return `
+          <li class="timeline-item timeline-item--note">
+            <span class="timeline-dot timeline-dot--note" aria-hidden="true"></span>
+            <div class="timeline-note-card">
+              <div class="note-meta">
+                <span class="note-cat hexa-tag">${t('timeline.resolutionNote')}</span>
+                <span class="note-cat hexa-tag">${escapeHtml(I18n.noteCategoryLabel(e.category))}</span>
+              </div>
+              <div class="note-body">${escapeHtml(e.body)}</div>
+              <div class="text-body-xs text-fg-neutral-tertiary">${fmtDate(e.ts)} · ${escapeHtml(I18n.translateActor(e.author))}</div>
+            </div>
+          </li>`;
+      }
+      return `
+        <li class="timeline-item">
+          <span class="timeline-dot" aria-hidden="true"></span>
+          <div>
+            <div class="text-body-sm">${escapeHtml(I18n.translateAuditEvent(e.event))}</div>
+            <div class="text-body-xs text-fg-neutral-tertiary">${fmtDate(e.ts)} · ${escapeHtml(I18n.translateActor(e.actor))}</div>
+          </div>
+        </li>`;
+    }).join('');
+  }
+
+  function syncItemTimelinePanel() {
+    const btn = document.getElementById('itemTimelineToggle');
+    const panel = document.getElementById('itemTimelinePanel');
+    if (!btn || !panel) return;
+    btn.setAttribute('aria-expanded', String(view.itemTimelineOpen));
+    panel.hidden = !view.itemTimelineOpen;
+  }
+
+  function toggleItemTimeline() {
+    view.itemTimelineOpen = !view.itemTimelineOpen;
+    syncItemTimelinePanel();
+    HT.track('item_timeline_toggled', { open: view.itemTimelineOpen });
+  }
+
+  function renderItemPageTimeline(o) {
+    const card = document.getElementById('itemPageTimeline');
+    const countEl = document.getElementById('itemTimelineCount');
+    const listEl = document.getElementById('itemTimelineList');
+    if (!card || !countEl || !listEl) return;
+
+    if (view.itemTimelineOrderId !== o.id) {
+      view.itemTimelineOrderId = o.id;
+      view.itemTimelineOpen = false;
+    }
+
+    const events = buildOrderTimelineEvents(o);
+    card.hidden = false;
+    countEl.textContent = events.length === 1
+      ? t('details.timelineOne', { count: events.length })
+      : t('details.timelineMany', { count: events.length });
+    listEl.innerHTML = renderOrderTimelineItems(o);
+    syncItemTimelinePanel();
+  }
+
+  // ============================================================
   // DRAWER — rule-aware corrective action UI
   // ============================================================
   function openDrawer(id) {
@@ -1117,6 +1316,7 @@
   function closeDrawer() {
     if (!view.openOrderId) return;
     view.openOrderId = null;
+    view.noteComposerOpen = false;
     document.getElementById('orderDrawer').hidden = true;
     document.getElementById('drawerScrim').hidden = true;
     HT.track('order_drawer_closed');
@@ -1132,18 +1332,18 @@
         <hexa-icon name="${o.statusTone === 'error' ? 'AlertOctagonIcon' : 'BlockedIcon'}"></hexa-icon>
         <div class="hexa-alert-body">
           <div class="hexa-alert-title">
-            ${o.statusTone === 'error' ? 'Why was this rejected?' : 'Why is this on hold?'}
-            <button class="rule-badge rule-badge--${rule.status.toLowerCase()}" data-track="drawer-rule-badge" onclick="filterByRule('${rule.code}','drawer')">${escapeHtml(rule.label)}</button>
+            ${o.statusTone === 'error' ? t('drawer.whyRejected') : t('drawer.whyBlocked')}
+            <button class="rule-badge rule-badge--${rule.status.toLowerCase()}" data-track="drawer-rule-badge" onclick="filterByRule('${rule.code}','drawer')">${escapeHtml(I18n.ruleLabel(rule.code))}</button>
           </div>
-          ${escapeHtml(rule.orderCopy)}
+          ${escapeHtml(I18n.ruleOrderCopy(rule.code))}
         </div>
       </div>` : '';
 
     // ---- Rule-specific action section ----
-    const actionSection = rule ? renderActionUi(o, rule) : `
+    const actionSection = rule ? renderActionUi(o, rule, 'drawer') : `
       <div class="section">
-        <h4>No action available</h4>
-        <p class="text-body-sm text-fg-neutral-secondary">${o.statusId === 'ACCEPTED' ? 'This order was accepted and is in the BEES OMS.' : 'This order is in queue and is being processed by BEES. Wait for the next state.'}</p>
+        <h4>${t('drawer.noAction')}</h4>
+        <p class="text-body-sm text-fg-neutral-secondary">${o.statusId === 'ACCEPTED' ? t('drawer.acceptedMsg') : t('drawer.queueMsg')}</p>
       </div>
     `;
 
@@ -1151,159 +1351,467 @@
     const notesList = (o.notes || []).map((n) => `
       <li class="note-item">
         <div class="note-meta">
-          <span class="note-cat hexa-tag">${escapeHtml(n.category)}</span>
-          <span class="text-body-xs text-fg-neutral-tertiary">${fmtDate(n.ts)} · ${escapeHtml(n.author)}</span>
+          <span class="note-cat hexa-tag">${escapeHtml(I18n.noteCategoryLabel(n.category))}</span>
+          <span class="text-body-xs text-fg-neutral-tertiary">${fmtDate(n.ts)} · ${escapeHtml(I18n.translateActor(n.author))}</span>
         </div>
         <div class="note-body">${escapeHtml(n.body)}</div>
       </li>
-    `).join('') || '<li class="text-body-sm text-fg-neutral-tertiary">No resolution notes yet.</li>';
+    `).join('') || `<li class="text-body-sm text-fg-neutral-tertiary">${t('drawer.noNotes')}</li>`;
 
     // ---- Audit trail (timeline) ----
-    const audit = (o.audit || []).map((a) => `
-      <li class="timeline-item">
-        <span class="timeline-dot"></span>
-        <div>
-          <div class="text-body-sm">${escapeHtml(a.event)}</div>
-          <div class="text-body-xs text-fg-neutral-tertiary">${fmtDate(a.ts)} · ${escapeHtml(a.actor)}</div>
-        </div>
-      </li>
-    `).join('');
+    const audit = renderOrderTimelineItems(o, { includeNotes: false });
 
     document.getElementById('drawerBody').innerHTML = `
-      <div class="section">
+      <div class="section drawer-status-section">
         ${statusPill(o)}
         ${reasonBlock}
       </div>
       <div class="section">
-        <h4>Order</h4>
+        <h4>${t('drawer.order')}</h4>
         <dl class="kv">
-          <dt>Receive date</dt><dd>${fmtDate(o.receivedAt)}</dd>
-          <dt>Retailer chain</dt><dd>${escapeHtml(o.chainName)}</dd>
-          <dt>POC</dt><dd>${escapeHtml(o.pocName)}<br><span class="text-body-xs text-fg-neutral-tertiary">${o.pocId} · ${escapeHtml(o.pocCity)} · ${o.pocRegion}</span></dd>
-          <dt>Vendor</dt><dd>${escapeHtml(o.vendorName)}</dd>
-          <dt>Sales rep</dt><dd>${escapeHtml(o.salesRepName)}</dd>
-          <dt>PO number</dt><dd style="font-family:ui-monospace,Menlo,monospace">${o.poNumber}</dd>
-          <dt>BEES order #</dt><dd>${o.beesOrderNumber ? `<span class="mono">${o.beesOrderNumber}</span>` : '<span class="text-fg-neutral-tertiary">Not yet assigned</span>'}</dd>
-          <dt>Items</dt><dd>${o.itemCount}</dd>
-          <dt>Total value</dt><dd>${fmtMoney(o.totalValue)}</dd>
+          <dt>${t('drawer.receiveDate')}</dt><dd>${fmtDate(o.receivedAt)}</dd>
+          <dt>${t('drawer.retailer')}</dt><dd>${escapeHtml(o.chainName)}</dd>
+          <dt>${t('drawer.poc')}</dt><dd>${escapeHtml(o.pocName)}<br><span class="text-body-xs text-fg-neutral-tertiary">${o.pocId} · ${escapeHtml(o.pocCity)} · ${o.pocRegion}</span></dd>
+          <dt>${t('drawer.vendor')}</dt><dd>${escapeHtml(o.vendorName)}</dd>
+          <dt>${t('drawer.po')}</dt><dd style="font-family:ui-monospace,Menlo,monospace">${o.poNumber}</dd>
+          <dt>${t('drawer.bees')}</dt><dd>${beesOrderNumberHtml(o, 'drawer')}</dd>
+          <dt>${t('drawer.items')}</dt><dd>${o.itemCount}</dd>
+          <dt>${t('drawer.totalValue')}</dt><dd>${fmtMoney(o.totalValue)}</dd>
         </dl>
       </div>
       ${actionSection}
-      <div class="section">
-        <h4>Resolution notes (${(o.notes || []).length})</h4>
+      <div class="section drawer-notes-section">
+        <h4>${t('drawer.notes', { count: (o.notes || []).length })}</h4>
         <ul class="note-list">${notesList}</ul>
-        <button class="hexa-btn hexa-btn--tertiary hexa-btn--sm" data-track="drawer-add-note" onclick="openNoteDialog('${o.id}')">
-          <hexa-icon name="EditIcon"></hexa-icon> Add note
+        <div class="drawer-note-composer" id="drawerNoteComposer" ${view.noteComposerOpen && view.openOrderId === o.id ? '' : 'hidden'}>
+          <label class="hexa-field">
+            <span class="hexa-label">${t('drawer.category')}</span>
+            <select class="hexa-select" id="drawerNoteCategory">
+              ${I18n.NOTE_CATEGORY_KEYS.map((c) => `<option value="${c}">${escapeHtml(I18n.noteCategoryLabel(c))}</option>`).join('')}
+            </select>
+          </label>
+          <label class="hexa-field">
+            <span class="hexa-label">${t('drawer.note')}</span>
+            <textarea class="hexa-textarea drawer-note-input" id="drawerNoteInput" maxlength="250" rows="3"
+              placeholder="${escapeHtml(t('drawer.notePlaceholder'))}"
+              oninput="updateDrawerNoteCount(this)"></textarea>
+            <span class="drawer-note-count text-body-xs text-fg-neutral-tertiary" aria-live="polite">
+              <span id="drawerNoteCount">0</span>/250
+            </span>
+          </label>
+          <div class="drawer-note-actions">
+            <button type="button" class="hexa-btn hexa-btn--primary hexa-btn--sm" data-track="drawer-save-note" onclick="submitDrawerNote('${o.id}')">
+              ${t('drawer.saveNote')}
+            </button>
+            <button type="button" class="hexa-btn hexa-btn--tertiary hexa-btn--sm" data-track="drawer-cancel-note" onclick="cancelDrawerNoteComposer()">
+              ${t('drawer.cancel')}
+            </button>
+          </div>
+        </div>
+        <button type="button" class="hexa-btn hexa-btn--tertiary hexa-btn--sm" id="drawerAddNoteBtn" data-track="drawer-add-note"
+          onclick="toggleDrawerNoteComposer('${o.id}')" ${view.noteComposerOpen && view.openOrderId === o.id ? 'hidden' : ''}>
+          <hexa-icon name="EditIcon"></hexa-icon> ${t('drawer.addNote')}
         </button>
       </div>
       <div class="section">
-        <h4>Timeline</h4>
+        <h4>${t('drawer.timeline')}</h4>
         <ul class="timeline">${audit}</ul>
       </div>
     `;
 
     // ---- Drawer footer — primary action button per rule ----
     const footer = document.getElementById('drawerFooter');
-    if (!rule) {
-      footer.innerHTML = `<button class="hexa-btn hexa-btn--tertiary" data-track="drawer-close" onclick="closeDrawer()">Close</button>`;
+    if (!isReprocessable(o) || !rule) {
+      footer.innerHTML = `<button class="hexa-btn hexa-btn--tertiary" data-track="drawer-close" onclick="closeDrawer()">${t('drawer.close')}</button>`;
     } else {
       footer.innerHTML = `
-        <button class="hexa-btn hexa-btn--tertiary" data-track="drawer-cancel" onclick="closeDrawer()">Cancel</button>
-        <button class="hexa-btn hexa-btn--primary" id="drawerPrimary" data-track="drawer-action-${rule.code.toLowerCase()}" onclick="executeDrawerAction()">
-          <hexa-icon name="SyncIcon"></hexa-icon>
-          ${escapeHtml(rule.actionLabel)}
-        </button>
+        <button class="hexa-btn hexa-btn--tertiary" data-track="drawer-cancel" onclick="closeDrawer()">${t('drawer.cancel')}</button>
+        ${renderActionFooter(o, rule, 'drawer')}
       `;
+    }
+
+    if (view.noteComposerOpen && view.openOrderId === o.id) {
+      requestAnimationFrame(() => document.getElementById('drawerNoteInput')?.focus());
     }
   }
 
-  function renderActionUi(o, rule) {
-    if (rule.action === 'reprocess-no-fix' || rule.action === 'bypass-only') {
-      return `
-        <div class="section action-section">
-          <h4>Corrective action</h4>
-          <p class="text-body-sm text-fg-neutral-secondary">${escapeHtml(rule.blurb)}</p>
-        </div>`;
-    }
-    if (rule.action === 'upc-selector') {
-      const affected = o.items.filter((it) => it.ruleCode === 'UPC_NOT_FOUND');
-      return `
-        <div class="section action-section">
-          <h4>Select correct UPCs</h4>
-          <p class="text-body-sm text-fg-neutral-secondary">${escapeHtml(rule.blurb)}</p>
-          <div class="upc-list">
-            ${affected.map((it) => {
-              const alts = alternativeUpcs(it.sku);
-              return `
-                <div class="upc-row">
-                  <div class="upc-row-line">
-                    <span class="line-num">Line ${String(it.lineNumber).padStart(2, '0')}</span>
-                    <span class="text-body-sm">${escapeHtml(it.name)}</span>
-                    <span class="text-body-xs text-fg-neutral-tertiary mono">Requested SKU: ${it.sku}</span>
-                  </div>
-                  <select class="hexa-select" data-track="drawer-upc-pick" data-line="${it.lineNumber}"
-                          onchange="setDrawerUpc(${it.lineNumber}, this.value)">
-                    <option value="">Choose correct UPC…</option>
-                    ${alts.map((a) => `<option value="${a.sku}">${a.sku} · ${escapeHtml(a.name)}</option>`).join('')}
-                  </select>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </div>`;
-    }
-    if (rule.action === 'price-choice') {
-      const affected = o.items.filter((it) => it.ruleCode === 'PRICE_MISMATCH');
-      return `
-        <div class="section action-section">
-          <h4>Choose price</h4>
-          <p class="text-body-sm text-fg-neutral-secondary">${escapeHtml(rule.blurb)}</p>
-          <div class="price-rows">
-            ${affected.map((it) => `
-              <div class="price-row">
-                <div class="text-body-sm"><strong>Line ${String(it.lineNumber).padStart(2, '0')}</strong> · ${escapeHtml(it.name)}</div>
-                <div class="text-body-xs text-fg-neutral-tertiary">
-                  Retailer requested ${fmtMoney(it.requestedUnitPrice)} · BEES contract ${fmtMoney(it.unitPrice)}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-          <fieldset class="price-choice">
-            <label class="hexa-radio"><input type="radio" name="priceChoice" value="bees" checked data-track="drawer-price-bees" onchange="view.drawerPriceChoice='bees'"/> Use BEES contract price</label>
-            <label class="hexa-radio"><input type="radio" name="priceChoice" value="requested" data-track="drawer-price-requested" onchange="view.drawerPriceChoice='requested'"/> Accept retailer's requested price</label>
-          </fieldset>
-        </div>`;
-    }
-    if (rule.action === 'rejected-choice') {
-      return `
-        <div class="section action-section">
-          <h4>Choose how to reprocess</h4>
-          <p class="text-body-sm text-fg-neutral-secondary">${escapeHtml(rule.blurb)}</p>
-          <fieldset class="price-choice">
-            <label class="hexa-radio"><input type="radio" name="rejectedChoice" value="as-is" checked data-track="drawer-rejected-as-is" onchange="view.drawerRejectedChoice='as-is'"/> Reprocess without fixes (re-include as-is)</label>
-            <label class="hexa-radio"><input type="radio" name="rejectedChoice" value="bypass" data-track="drawer-rejected-bypass" onchange="view.drawerRejectedChoice='bypass'"/> Bypass the rule and reprocess</label>
-          </fieldset>
-        </div>`;
-    }
-    return '';
+  function renderActionFooter(o, rule, ctx) {
+    const btnId = ctx === 'item-page' ? 'itemPagePrimary' : 'drawerPrimary';
+    const track = ctx === 'item-page' ? 'item-page-action' : 'drawer-action';
+    const onclick = ctx === 'item-page' ? 'executeItemPageAction()' : 'executeDrawerAction()';
+    return `
+      <button type="button" class="hexa-btn hexa-btn--primary" id="${btnId}"
+        data-track="${track}-${rule.code.toLowerCase()}" onclick="${onclick}">
+        <hexa-icon name="SyncIcon"></hexa-icon>
+        ${escapeHtml(I18n.ruleActionLabel(rule.code))}
+      </button>`;
   }
 
   function setDrawerUpc(lineNumber, sku) {
     view.drawerSelectedUpcs[lineNumber] = sku;
   }
 
+  function setItemLineUpc(lineNumber, sku) {
+    if (!sku) return;
+    setDrawerUpc(lineNumber, sku);
+    HT.track('item_page_upc_selected', { line: lineNumber, has_value: true });
+    if (view.itemPageOrderId) renderItemPage(view.itemPageOrderId);
+  }
+
+  function renderUpcSelectedChip(sku) {
+    const p = catalogProduct(sku);
+    if (!p) return '';
+    return `
+      <div class="upc-selected-chip">
+        <hexa-icon name="CheckIcon"></hexa-icon>
+        <div class="upc-selected-chip-text">
+          <span class="hexa-field-label">${t('action.upcSelected')}</span>
+          <span class="upc-pick-sku mono">${p.sku}</span>
+          <span class="upc-pick-name">${escapeHtml(p.name)}</span>
+        </div>
+        <button type="button" class="hexa-btn hexa-btn--tertiary hexa-btn--sm" data-track="upc-modal-clear"
+          onclick="clearUpcFixPick()">${t('action.changeUpc')}</button>
+      </div>`;
+  }
+
+  function renderUpcSearchResultButtons(items, pickedSku) {
+    if (!items.length) {
+      return `<div class="upc-search-empty">${t('action.upcNoResults')}</div>`;
+    }
+    return items.map((item) => `
+      <button type="button" class="upc-search-result ${pickedSku === item.sku ? 'is-active' : ''}"
+        role="option" aria-selected="${pickedSku === item.sku}" data-sku="${item.sku}" data-track="upc-modal-result"
+        onclick="pickUpcFromSearch('${item.sku}')">
+        <span class="upc-search-result-main">
+          <span class="upc-pick-sku mono">${item.sku}</span>
+          <span class="upc-pick-name">${escapeHtml(item.name)}</span>
+        </span>
+        <span class="upc-search-result-meta">${escapeHtml(item.family)}</span>
+      </button>
+    `).join('');
+  }
+
+  function renderUpcSearchModalBody(it, selectedSku) {
+    return `
+      <div class="upc-search">
+        <label class="hexa-field">
+          <span class="hexa-field-label">${t('action.searchUpcLabel')}</span>
+          <span class="hexa-input-wrap">
+            <hexa-icon name="SearchIcon"></hexa-icon>
+            <input type="search" class="hexa-input upc-search-input" id="upcFixSearchInput"
+              placeholder="${escapeHtml(t('action.searchUpcPlaceholder'))}" autocomplete="off"
+              oninput="onUpcFixSearchInput(this.value, '${it.sku}')" />
+          </span>
+          <span class="hexa-field-hint" id="upcFixSearchHint">${t('action.upcSearchHint')}</span>
+        </label>
+        <div class="upc-search-results-wrap">
+          <div class="upc-search-results" id="upcFixSearchResults" role="listbox" aria-label="${escapeHtml(t('action.searchUpcLabel'))}"></div>
+        </div>
+        <div class="upc-search-selected ${selectedSku ? '' : 'is-hidden'}" id="upcFixSelectedPreview">
+          ${selectedSku ? renderUpcSelectedChip(selectedSku) : ''}
+        </div>
+        <input type="hidden" id="upcFixPickedSku" value="${escapeHtml(selectedSku || '')}" />
+      </div>`;
+  }
+
+  function onUpcFixSearchInput(query, excludeSku) {
+    const hint = document.getElementById('upcFixSearchHint');
+    const results = document.getElementById('upcFixSearchResults');
+    const q = (query || '').trim();
+    document.querySelector('#upcFixModal .upc-search')?.classList.remove('is-invalid');
+
+    if (q.length < 2) {
+      if (hint) hint.textContent = t('action.upcSearchHint');
+      if (results) results.innerHTML = '';
+      return;
+    }
+
+    const items = searchCatalog(q, excludeSku);
+    const picked = view.upcModalPickedSku || document.getElementById('upcFixPickedSku')?.value || '';
+    if (hint) {
+      hint.textContent = items.length
+        ? t('action.upcSearchCount', { count: String(items.length) })
+        : t('action.upcNoResults');
+    }
+    if (results) results.innerHTML = renderUpcSearchResultButtons(items, picked);
+  }
+
+  function pickUpcFromSearch(sku) {
+    view.upcModalPickedSku = sku;
+    const hidden = document.getElementById('upcFixPickedSku');
+    if (hidden) hidden.value = sku;
+    document.querySelector('#upcFixModal .upc-search')?.classList.remove('is-invalid');
+
+    const preview = document.getElementById('upcFixSelectedPreview');
+    if (preview) {
+      preview.classList.remove('is-hidden');
+      preview.innerHTML = renderUpcSelectedChip(sku);
+    }
+
+    document.querySelectorAll('#upcFixSearchResults .upc-search-result').forEach((btn) => {
+      const active = btn.dataset.sku === sku;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    HT.track('upc_modal_search_pick', { sku });
+  }
+
+  function clearUpcFixPick() {
+    view.upcModalPickedSku = '';
+    const hidden = document.getElementById('upcFixPickedSku');
+    if (hidden) hidden.value = '';
+    const preview = document.getElementById('upcFixSelectedPreview');
+    if (preview) {
+      preview.classList.add('is-hidden');
+      preview.innerHTML = '';
+    }
+    const input = document.getElementById('upcFixSearchInput');
+    const excludeSku = input?.dataset.excludeSku || '';
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+    onUpcFixSearchInput('', excludeSku);
+    HT.track('upc_modal_search_cleared', {});
+  }
+
+  function openUpcFixModal(lineNumber) {
+    const o = D.orders.find((x) => x.id === view.itemPageOrderId);
+    const it = o?.items.find((x) => x.lineNumber === lineNumber);
+    if (!o || !it || it.ruleCode !== 'UPC_NOT_FOUND') return;
+
+    view.itemUpcModalLine = lineNumber;
+    const selected = view.drawerSelectedUpcs[lineNumber] || '';
+    view.upcModalPickedSku = selected;
+    const modal = document.getElementById('upcFixModal');
+
+    document.getElementById('upcFixModalTitle').textContent = t('modal.chooseUpc');
+    document.getElementById('upcFixModalSubtitle').textContent =
+      `${t('action.line', { n: String(it.lineNumber).padStart(2, '0') })} · ${escapeHtml(it.name)} · ${t('action.requestedSku', { sku: it.sku })}`;
+    document.getElementById('upcFixModalBody').innerHTML = renderUpcSearchModalBody(it, selected);
+    document.getElementById('upcFixModalFooter').innerHTML = `
+      <button type="button" class="hexa-btn hexa-btn--tertiary" data-track="upc-modal-cancel" onclick="closeUpcFixModal()">${t('drawer.cancel')}</button>
+      <button type="button" class="hexa-btn hexa-btn--primary" data-track="upc-modal-apply" onclick="confirmUpcFixModal()">${t('action.applyUpc')}</button>
+    `;
+
+    const searchInput = document.getElementById('upcFixSearchInput');
+    if (searchInput) searchInput.dataset.excludeSku = it.sku;
+
+    if (typeof modal.showModal === 'function') modal.showModal();
+    else modal.setAttribute('open', '');
+    requestAnimationFrame(() => {
+      document.getElementById('upcFixSearchInput')?.focus();
+      if (selected) onUpcFixSearchInput(selected, it.sku);
+    });
+    HT.track('upc_fix_modal_opened', { line: lineNumber });
+  }
+
+  function closeUpcFixModal() {
+    const modal = document.getElementById('upcFixModal');
+    view.itemUpcModalLine = null;
+    view.upcModalPickedSku = '';
+    if (modal.open) modal.close();
+    else modal.removeAttribute('open');
+  }
+
+  function confirmUpcFixModal() {
+    const lineNumber = view.itemUpcModalLine;
+    const picked = view.upcModalPickedSku || document.getElementById('upcFixPickedSku')?.value;
+    if (!picked) {
+      document.querySelector('#upcFixModal .upc-search')?.classList.add('is-invalid');
+      document.getElementById('upcFixSearchInput')?.focus();
+      return;
+    }
+    setItemLineUpc(lineNumber, picked);
+    closeUpcFixModal();
+    HT.track('upc_fix_modal_applied', { line: lineNumber });
+  }
+
+  function renderUpcSelectOptions(it, selectedSku) {
+    return alternativeUpcs(it.sku).map((a) =>
+      `<option value="${a.sku}" ${selectedSku === a.sku ? 'selected' : ''}>${a.sku} · ${escapeHtml(a.name)}</option>`
+    ).join('');
+  }
+
+  function renderLineUpcSelect(it, track, onchangeFn = 'setItemLineUpc') {
+    const selected = view.drawerSelectedUpcs[it.lineNumber] || '';
+    return `
+      <select class="hexa-select item-line-upc-select" data-track="${track}" data-line="${it.lineNumber}"
+              onchange="${onchangeFn}(${it.lineNumber}, this.value)">
+        <option value="">${escapeHtml(t('action.chooseUpc'))}</option>
+        ${renderUpcSelectOptions(it, selected)}
+      </select>`;
+  }
+
+  function renderItemLineUpcAction(it) {
+    const selected = view.drawerSelectedUpcs[it.lineNumber];
+
+    if (selected) {
+      const alt = catalogProduct(selected);
+      return `
+        <span class="item-upc-picked">
+          <hexa-icon name="CheckIcon"></hexa-icon>
+          <span class="mono">${escapeHtml(selected)}</span>
+          ${alt ? `<span class="item-upc-picked-name">${escapeHtml(alt.name)}</span>` : ''}
+        </span>
+        <button type="button" class="item-upc-fix-btn" data-track="item-page-upc-change"
+          onclick="event.stopPropagation(); openUpcFixModal(${it.lineNumber})">${t('action.changeUpc')}</button>`;
+    }
+
+    return `
+      <button type="button" class="item-upc-fix-btn item-upc-fix-btn--primary" data-track="item-page-upc-fix"
+        onclick="event.stopPropagation(); openUpcFixModal(${it.lineNumber})">
+        <hexa-icon name="SyncIcon"></hexa-icon>
+        ${t('action.fixUpc')}
+      </button>`;
+  }
+
+  function renderItemLineIssueBlock(it, o) {
+    const lineRule = it.ruleCode ? D.RULE_BY_CODE[it.ruleCode] : null;
+    if (!lineRule) return '';
+
+    const hasUpcFix = it.ruleCode === 'UPC_NOT_FOUND' && o && o.ruleCode === 'UPC_NOT_FOUND' && isReprocessable(o);
+    const upcAction = hasUpcFix ? renderItemLineUpcAction(it) : '';
+    const icon = it.status === 'REJECTED' ? 'AlertOctagonIcon' : 'BlockedIcon';
+
+    return `
+      <div class="item-row-issue-wrap">
+        <div class="item-row-issue-toolbar">
+          <div class="item-row-issue item-row-issue--compact">
+            <hexa-icon name="${icon}"></hexa-icon>
+            <div class="item-row-issue-main">
+              ${ruleBadge(lineRule.code, 'item-line', false)}
+              <span class="item-row-issue-copy">${escapeHtml(I18n.ruleOrderCopy(lineRule.code))}</span>
+            </div>
+          </div>
+          ${upcAction ? `<div class="item-row-upc-ctl" onclick="event.stopPropagation()">${upcAction}</div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  function renderActionUi(o, rule, ctx) {
+    const track = ctx === 'drawer' ? 'drawer' : 'item-page';
+    const compact = ctx === 'modal';
+    const heading = (key) => compact ? '' : `<h4>${t(key)}</h4>`;
+    if (rule.action === 'reprocess-no-fix' || rule.action === 'bypass-only') {
+      return `
+        <div class="section action-section${compact ? ' action-section--compact' : ''}">
+          ${heading('action.corrective')}
+          <p class="text-body-sm text-fg-neutral-secondary">${escapeHtml(I18n.ruleBlurb(rule.code))}</p>
+        </div>`;
+    }
+    if (rule.action === 'upc-selector') {
+      const affected = o.items.filter((it) => it.ruleCode === 'UPC_NOT_FOUND');
+      if (compact) {
+        return `
+          <div class="section action-section action-section--compact">
+            <p class="text-body-sm text-fg-neutral-secondary">${escapeHtml(I18n.ruleBlurb(rule.code))}</p>
+            <p class="text-body-sm text-fg-neutral-secondary">${t('action.selectUpcsOnLines')}</p>
+          </div>`;
+      }
+      return `
+        <div class="section action-section${compact ? ' action-section--compact' : ''}">
+          ${heading('action.selectUpcs')}
+          <p class="text-body-sm text-fg-neutral-secondary">${escapeHtml(I18n.ruleBlurb(rule.code))}</p>
+          <div class="upc-list">
+            ${affected.map((it) => `
+                <div class="upc-row">
+                  <div class="upc-row-line">
+                    <span class="line-num">${t('action.line', { n: String(it.lineNumber).padStart(2, '0') })}</span>
+                    <span class="text-body-sm">${escapeHtml(it.name)}</span>
+                    <span class="text-body-xs text-fg-neutral-tertiary mono">${t('action.requestedSku', { sku: it.sku })}</span>
+                  </div>
+                  ${renderLineUpcSelect(it, `${track}-upc-pick`)}
+                </div>
+              `).join('')}
+          </div>
+        </div>`;
+    }
+    if (rule.action === 'price-choice') {
+      const affected = o.items.filter((it) => it.ruleCode === 'PRICE_MISMATCH');
+      return `
+        <div class="section action-section${compact ? ' action-section--compact' : ''}">
+          ${heading('action.choosePrice')}
+          <p class="text-body-sm text-fg-neutral-secondary">${escapeHtml(I18n.ruleBlurb(rule.code))}</p>
+          <div class="price-rows">
+            ${affected.map((it) => `
+              <div class="price-row">
+                <div class="text-body-sm"><strong>${t('action.line', { n: String(it.lineNumber).padStart(2, '0') })}</strong> · ${escapeHtml(it.name)}</div>
+                <div class="text-body-xs text-fg-neutral-tertiary">
+                  ${t('action.retailerRequested', { price: fmtMoney(it.requestedUnitPrice), contract: fmtMoney(it.unitPrice) })}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <fieldset class="price-choice">
+            <label class="hexa-radio"><input type="radio" name="priceChoice-${ctx}" value="bees" checked data-track="${track}-price-bees" onchange="view.drawerPriceChoice='bees'"/> ${t('action.useBeesPrice')}</label>
+            <label class="hexa-radio"><input type="radio" name="priceChoice-${ctx}" value="requested" data-track="${track}-price-requested" onchange="view.drawerPriceChoice='requested'"/> ${t('action.useRetailerPrice')}</label>
+          </fieldset>
+        </div>`;
+    }
+    if (rule.action === 'rejected-choice') {
+      return `
+        <div class="section action-section${compact ? ' action-section--compact' : ''}">
+          ${heading('action.chooseReprocess')}
+          <p class="text-body-sm text-fg-neutral-secondary">${escapeHtml(I18n.ruleBlurb(rule.code))}</p>
+          <fieldset class="price-choice">
+            <label class="hexa-radio"><input type="radio" name="rejectedChoice-${ctx}" value="as-is" checked data-track="${track}-rejected-as-is" onchange="view.drawerRejectedChoice='as-is'"/> ${t('action.reprocessAsIs')}</label>
+            <label class="hexa-radio"><input type="radio" name="rejectedChoice-${ctx}" value="bypass" data-track="${track}-rejected-bypass" onchange="view.drawerRejectedChoice='bypass'"/> ${t('action.bypassReprocess')}</label>
+          </fieldset>
+        </div>`;
+    }
+    return '';
+  }
+
   function executeDrawerAction() {
-    if (!view.openOrderId) return;
-    const o = D.orders.find((x) => x.id === view.openOrderId);
+    if (view.openOrderId) executeReprocessAction(view.openOrderId, 'drawer');
+  }
+
+  function executeItemPageAction() {
+    if (view.itemPageOrderId) executeReprocessAction(view.itemPageOrderId, 'item-page');
+  }
+
+  function openReprocessModal() {
+    const orderId = view.itemPageOrderId;
+    const o = D.orders.find((x) => x.id === orderId);
+    if (!o || !o.ruleCode || !isReprocessable(o)) return;
+    const rule = D.RULE_BY_CODE[o.ruleCode];
+    if (!rule) return;
+
+    view.drawerPriceChoice = 'bees';
+    view.drawerRejectedChoice = 'as-is';
+
+    const modal = document.getElementById('reprocessModal');
+    document.getElementById('reprocessModalTitle').textContent = I18n.modalTitleForAction(rule.action) || I18n.ruleActionLabel(rule.code);
+    document.getElementById('reprocessModalSubtitle').textContent = I18n.ruleOrderCopy(rule.code) || '';
+    document.getElementById('reprocessModalBody').innerHTML = renderActionUi(o, rule, 'modal');
+    document.getElementById('reprocessModalFooter').innerHTML = `
+      <button type="button" class="hexa-btn hexa-btn--tertiary" data-track="item-page-reprocess-cancel" onclick="closeReprocessModal()">${t('drawer.cancel')}</button>
+      ${renderActionFooter(o, rule, 'item-page')}
+    `;
+
+    if (typeof modal.showModal === 'function') modal.showModal();
+    else modal.setAttribute('open', '');
+    HT.track('reprocess_modal_opened', { status: o.statusId, rule_category: rule.code });
+  }
+
+  function closeReprocessModal() {
+    const modal = document.getElementById('reprocessModal');
+    if (modal.open) modal.close();
+    else modal.removeAttribute('open');
+  }
+
+  function executeReprocessAction(orderId, source) {
+    const o = D.orders.find((x) => x.id === orderId);
     if (!o || !o.ruleCode) return;
     const rule = D.RULE_BY_CODE[o.ruleCode];
+    const btnId = source === 'item-page' ? 'itemPagePrimary' : 'drawerPrimary';
 
-    // Validate UPC selector — every affected line must have a chosen replacement.
     if (rule.action === 'upc-selector') {
       const affected = o.items.filter((it) => it.ruleCode === 'UPC_NOT_FOUND');
       const allChosen = affected.every((it) => view.drawerSelectedUpcs[it.lineNumber]);
       if (!allChosen) {
-        flashHint('Pick a UPC for every affected line before reprocessing.');
+        flashHint(t('action.pickUpc'));
         return;
       }
     }
@@ -1316,14 +1824,14 @@
       rejectedChoice: view.drawerRejectedChoice,
     };
 
-    const btn = document.getElementById('drawerPrimary');
+    const btn = document.getElementById(btnId);
     if (btn) { btn.classList.add('hexa-btn--loading'); btn.disabled = true; }
 
     HT.track('reprocess_triggered', {
       status_before: o.statusId,
       rule_category: rule.code,
       chosen_action: rule.action,
-      source: 'drawer',
+      source,
     });
 
     setTimeout(() => {
@@ -1334,38 +1842,74 @@
         rule_category: rule.code,
       });
       if (btn) { btn.classList.remove('hexa-btn--loading'); btn.disabled = false; }
-      populateDrawer(o);
+      if (source === 'item-page') closeReprocessModal();
+      if (view.openOrderId === orderId) populateDrawer(o);
       renderTable();
       const row = document.querySelector(`.order-row[data-id="${o.id}"]`);
       if (row) row.classList.add('flash');
-      if (view.itemPageOrderId === o.id) renderItemPage(o.id);
+      if (view.itemPageOrderId === orderId) renderItemPage(orderId);
     }, 900);
   }
 
   // ============================================================
-  // RESOLUTION NOTES — simple inline dialog (HLR FR-9)
+  // RESOLUTION NOTES — inline composer in drawer (HLR FR-9)
   // ============================================================
-  function openNoteDialog(orderId) {
+  const NOTE_CATEGORIES = I18n.NOTE_CATEGORY_KEYS;
+
+  function updateDrawerNoteCount(el) {
+    const counter = document.getElementById('drawerNoteCount');
+    if (counter) counter.textContent = String(el.value.length);
+  }
+
+  function toggleDrawerNoteComposer(orderId) {
     const o = D.orders.find((x) => x.id === orderId);
     if (!o) return;
-    HT.track('resolution_note_dialog_opened', { status: o.statusId, rule_category: o.ruleCode || null });
-    const categories = ['catalog fix', 'pricing update', 'POC configuration', 'delivery window', 'packaging', 'retailer-side issue', 'other'];
-    const cat = window.prompt('Note category (' + categories.join(' / ') + '):', 'other');
-    if (cat == null) return;
-    const body = window.prompt('Note content:');
-    if (body == null || !body.trim()) return;
+    view.noteComposerOpen = true;
+    if (view.openOrderId !== orderId) openDrawer(orderId);
+    else populateDrawer(o);
+    HT.track('resolution_note_composer_opened', { status: o.statusId, rule_category: o.ruleCode || null });
+  }
+
+  function cancelDrawerNoteComposer() {
+    view.noteComposerOpen = false;
+    const o = D.orders.find((x) => x.id === view.openOrderId);
+    if (o) populateDrawer(o);
+    HT.track('resolution_note_composer_cancelled');
+  }
+
+  function addResolutionNote(orderId, category, body) {
+    const o = D.orders.find((x) => x.id === orderId);
+    if (!o || !body) return false;
     const note = {
       ts: new Date().toISOString(),
-      category: categories.includes(cat) ? cat : 'other',
-      body: body.trim(),
+      category: NOTE_CATEGORIES.includes(category) ? category : 'other',
+      body: body.slice(0, 250),
       author: 'Ops user',
     };
     o.notes = o.notes || [];
     o.notes.push(note);
     o.audit.push({ ts: note.ts, event: `Resolution note added (${note.category})`, actor: note.author });
-    HT.track('resolution_note_added', { category: note.category });
-    if (view.openOrderId === orderId) populateDrawer(o);
+    HT.track('resolution_note_added', { category: note.category, length: note.body.length });
+    return true;
+  }
+
+  function submitDrawerNote(orderId) {
+    const input = document.getElementById('drawerNoteInput');
+    const categoryEl = document.getElementById('drawerNoteCategory');
+    const body = input?.value.trim();
+    if (!body) {
+      input?.focus();
+      return;
+    }
+    if (!addResolutionNote(orderId, categoryEl?.value || 'other', body)) return;
+    view.noteComposerOpen = false;
+    const o = D.orders.find((x) => x.id === orderId);
+    if (o && view.openOrderId === orderId) populateDrawer(o);
     if (view.itemPageOrderId === orderId) renderItemPage(orderId);
+  }
+
+  function openNoteDialog(orderId) {
+    toggleDrawerNoteComposer(orderId);
   }
 
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && view.openOrderId) closeDrawer(); });
@@ -1391,7 +1935,7 @@
   function toggleRowSelection(id, on) {
     const o = D.orders.find((x) => x.id === id);
     if (on && o && !isBulkSelectable(o)) {
-      flashHint('Bulk reprocess works only on Blocked orders sharing the same rule.');
+      flashHint(t('bulk.sameRule'));
       return;
     }
     if (on) view.selected.add(id); else view.selected.delete(id);
@@ -1433,9 +1977,9 @@
     const hintEl = document.getElementById('bulkRuleHint');
     if (pin) {
       const rule = D.RULE_BY_CODE[pin];
-      hintEl.textContent = `Bulk pinned to: ${rule.label} — only orders with this rule can be added.`;
+      hintEl.textContent = t('bulk.hintPinned', { rule: I18n.ruleLabel(pin) });
     } else if (eligiblePage.length) {
-      hintEl.textContent = 'Bulk reprocess: select Blocked orders sharing the same rule.';
+      hintEl.textContent = t('bulk.hintDefault');
     } else {
       hintEl.textContent = '';
     }
@@ -1449,28 +1993,28 @@
     cb.disabled = eligiblePage.length === 0;
 
     document.getElementById('bulkSelectAllLabel').textContent =
-      eligiblePage.length === 0 ? 'No eligible orders on this page'
-                                : `Select all on this page (${eligiblePage.length})`;
+      eligiblePage.length === 0 ? t('bulk.noEligible')
+                                : t('bulk.selectAll', { count: eligiblePage.length });
 
     const total = view.selected.size;
-    document.getElementById('bulkCount').textContent = total === 1 ? '1 selected' : `${total.toLocaleString()} selected`;
+    document.getElementById('bulkCount').textContent = total === 1 ? t('bulk.selectedOne') : t('bulk.selectedMany', { count: total.toLocaleString() });
     document.getElementById('bulkClearBtn').disabled = total === 0;
     const reBtn = document.getElementById('bulkReprocessBtn');
     reBtn.disabled = total === 0;
     document.getElementById('bulkReprocessLabel').textContent =
-      total > 0 ? `Reprocess selected (${total.toLocaleString()})` : 'Reprocess selected';
+      total > 0 ? t('bulk.reprocessCount', { count: total.toLocaleString() }) : t('bulk.reprocess');
   }
 
   function reprocessSelected() {
     const ids = [...view.selected];
     if (!ids.length) return;
     const pin = selectedRuleCode();
-    if (!pin) { flashHint('All selected orders must share the same blocking rule.'); return; }
+    if (!pin) { flashHint(t('bulk.mustShareRule')); return; }
     const rule = D.RULE_BY_CODE[pin];
 
     // FR-8: confirmation dialog for batches > 50 orders.
     if (ids.length > 50) {
-      const ok = window.confirm(`You are about to reprocess ${ids.length} orders, all blocked by "${rule.label}". Continue?`);
+      const ok = window.confirm(t('bulk.confirm', { count: ids.length, rule: I18n.ruleLabel(pin) }));
       if (!ok) return;
       HT.track('bulk_confirmation_shown', { count: ids.length, rule_category: pin });
     }
@@ -1512,59 +2056,67 @@
   function renderItemPage(orderId) {
     const o = D.orders.find((x) => x.id === orderId);
     if (!o) {
-      document.getElementById('itemPageSummary').innerHTML = `<div class="text-body-md">Order not found. <a href="#orders" class="hexa-link">Back to all orders</a></div>`;
+      document.getElementById('itemPageSummary').innerHTML = `<div class="text-body-md">${t('details.notFound')} <a href="#orders" class="hexa-link">${t('details.back')}</a></div>`;
+      document.getElementById('itemPageReprocessBtn').hidden = true;
+      document.getElementById('itemPageTimeline').hidden = true;
       document.getElementById('itemSummaryCards').innerHTML = '';
       document.getElementById('itemListWrap').innerHTML = '';
       return;
     }
     view.itemPageOrderId = orderId;
-
-    // Band action — only blocked/rejected orders expose "Take action".
-    const actionBtn = document.getElementById('itemPageActionBtn');
-    const actionLabel = document.getElementById('itemPageActionLabel');
-    if (isReprocessable(o)) {
-      actionBtn.style.display = '';
-      const rule = D.RULE_BY_CODE[o.ruleCode];
-      actionLabel.textContent = rule ? rule.actionLabel : 'Take action';
-    } else {
-      actionBtn.style.display = 'none';
+    if (view._itemPageUpcOrderId !== orderId) {
+      view.drawerSelectedUpcs = {};
+      view.itemUpcModalLine = null;
+      view._itemPageUpcOrderId = orderId;
     }
+    view.drawerPriceChoice = 'bees';
+    view.drawerRejectedChoice = 'as-is';
 
     const rule = o.ruleCode ? D.RULE_BY_CODE[o.ruleCode] : null;
+    const reprocessBtn = document.getElementById('itemPageReprocessBtn');
+    if (isReprocessable(o) && rule) {
+      reprocessBtn.hidden = false;
+      document.getElementById('itemPageReprocessBtnLabel').textContent = I18n.ruleActionLabel(rule.code);
+      reprocessBtn.setAttribute('data-track', `item-page-reprocess-open-${rule.code.toLowerCase()}`);
+    } else {
+      reprocessBtn.hidden = true;
+    }
+
     document.getElementById('itemPageSummary').innerHTML = `
       <div class="order-details-status">
         ${statusPill(o)}
-        ${rule ? `<span class="order-details-reason">${escapeHtml(rule.orderCopy)}</span>` : ''}
+        ${rule ? `<span class="order-details-reason">${escapeHtml(I18n.ruleOrderCopy(rule.code))}</span>` : ''}
         ${rule ? ruleBadge(rule.code, 'item-page') : ''}
       </div>
       <dl class="order-details-grid">
-        <div><dt>BEES order number</dt><dd>${o.beesOrderNumber ? `<span class="mono">${o.beesOrderNumber}</span>` : '<span class="text-fg-neutral-tertiary">Not yet assigned</span>'}</dd></div>
-        <div><dt>PO number</dt><dd><span class="mono">${o.poNumber}</span></dd></div>
-        <div><dt>Receive date</dt><dd>${fmtDate(o.receivedAt)}</dd></div>
-        <div><dt>POC</dt><dd>${escapeHtml(o.pocName)} <span class="text-fg-neutral-tertiary">${o.pocId} · ${escapeHtml(o.pocCity)}</span></dd></div>
-        <div><dt>Retailer chain</dt><dd>${escapeHtml(o.chainName)}</dd></div>
-        <div><dt>Vendor</dt><dd>${escapeHtml(o.vendorName)}</dd></div>
-        <div><dt>Sales rep</dt><dd>${escapeHtml(o.salesRepName)}</dd></div>
-        <div><dt>Items</dt><dd>${o.itemCount.toLocaleString()}</dd></div>
-        <div><dt>Total value</dt><dd><strong>${fmtMoney(o.totalValue)}</strong></dd></div>
+        <div><dt>${t('details.beesOrder')}</dt><dd>${beesOrderNumberHtml(o, 'item-page')}</dd></div>
+        <div><dt>${t('details.po')}</dt><dd><span class="mono">${o.poNumber}</span></dd></div>
+        <div><dt>${t('details.receiveDate')}</dt><dd>${fmtDate(o.receivedAt)}</dd></div>
+        <div><dt>${t('table.poc')}</dt><dd>${escapeHtml(o.pocName)} <span class="text-fg-neutral-tertiary">${o.pocId} · ${escapeHtml(o.pocCity)}</span></dd></div>
+        <div><dt>${t('details.retailer')}</dt><dd>${escapeHtml(o.chainName)}</dd></div>
+        <div><dt>${t('details.vendor')}</dt><dd>${escapeHtml(o.vendorName)}</dd></div>
+        <div><dt>${t('details.items')}</dt><dd>${o.itemCount.toLocaleString()}</dd></div>
+        <div><dt>${t('details.totalValue')}</dt><dd><strong>${fmtMoney(o.totalValue)}</strong></dd></div>
       </dl>
     `;
+
+    renderItemPageTimeline(o);
 
     // Per-line counts — strict 4-state line model (no ALERT).
     const counts = { OK: 0, BLOCKED: 0, REJECTED: 0, PENDING: 0 };
     o.items.forEach((it) => { counts[it.status] = (counts[it.status] || 0) + 1; });
     const chipDef = [
-      { key: 'OK',       label: 'OK',       tone: 'success' },
-      { key: 'BLOCKED',  label: 'Blocked',  tone: 'blocked' },
-      { key: 'REJECTED', label: 'Rejected', tone: 'error'   },
-      { key: 'PENDING',  label: 'In queue', tone: 'info'    },
+      { key: 'OK',       tone: 'success' },
+      { key: 'BLOCKED',  tone: 'blocked' },
+      { key: 'REJECTED', tone: 'error'   },
+      { key: 'PENDING',  tone: 'info'    },
     ].filter((c) => counts[c.key] > 0);
 
     document.getElementById('itemSummaryCards').innerHTML = chipDef.map((c) => `
       <div class="item-stat">
         <span class="item-stat-dot dot-${c.tone}"></span>
         <span class="item-stat-num">${counts[c.key]}</span>
-        <span class="item-stat-label">${c.label}</span>
+        <span class="item-stat-label">${I18n.lineStatusLabel(c.key)}</span>
       </div>
     `).join('');
 
@@ -1576,10 +2128,7 @@
                      : it.status === 'BLOCKED'  ? 'blocked'
                      : it.status === 'PENDING'  ? 'info'
                      : 'success';
-      const lineLabel = it.status === 'REJECTED' ? 'Rejected'
-                      : it.status === 'BLOCKED'  ? 'Blocked'
-                      : it.status === 'PENDING'  ? 'In queue'
-                      : 'OK';
+      const lineLabel = I18n.lineStatusLabel(it.status);
 
       const lineRule = it.ruleCode ? D.RULE_BY_CODE[it.ruleCode] : null;
       const priceDiverges = it.unitPrice !== it.requestedUnitPrice;
@@ -1598,20 +2147,14 @@
           <div class="item-metric is-adjusted">
             <div class="item-metric-label">${label}</div>
             <div class="item-metric-value">
-              <span class="item-metric-was">Requested ${reqStr}</span>
+              <span class="item-metric-was">${t('details.requested', { value: reqStr })}</span>
               <span class="item-metric-arrow">→</span>
               <span class="item-metric-now">${delStr}</span>
             </div>
           </div>`;
       }
 
-      const issue = lineRule
-        ? `<div class="item-row-issue">
-             <hexa-icon name="${it.status === 'REJECTED' ? 'AlertOctagonIcon' : 'BlockedIcon'}"></hexa-icon>
-             <div class="item-row-issue-text">
-               <strong>${escapeHtml(lineRule.label)}</strong> — ${escapeHtml(lineRule.orderCopy)}
-             </div>
-           </div>` : '';
+      const issueBlock = renderItemLineIssueBlock(it, o);
 
       const initials = it.name.split(/\s|—|-/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
@@ -1621,27 +2164,27 @@
             <div class="item-thumb" aria-hidden="true">${initials}</div>
             <div class="item-identity">
               <div class="item-identity-top">
-                <span class="item-line-num">Line ${String(it.lineNumber).padStart(2, '0')}</span>
+                <span class="item-line-num">${t('details.line', { n: String(it.lineNumber).padStart(2, '0') })}</span>
                 <span class="status-pill is-${lineTone}">${lineLabel}</span>
               </div>
               <div class="item-name-main">${escapeHtml(it.name)}</div>
               <div class="item-name-meta">SKU ${it.sku} · ${escapeHtml(it.family)} · ${it.uom}</div>
             </div>
             <div class="item-metrics">
-              ${metric('Requested Qty',         it.requestedQty,       it.qty,       false, false)}
-              ${metric('Requested Unit Price',  it.requestedUnitPrice, it.unitPrice, priceDiverges, true)}
-              ${metric('Requested line total',  it.requestedLineValue, it.lineValue, priceDiverges, true)}
+              ${metric(t('details.reqQty'),         it.requestedQty,       it.qty,       false, false)}
+              ${metric(t('details.reqPrice'),  it.requestedUnitPrice, it.unitPrice, priceDiverges, true)}
+              ${metric(t('details.reqTotal'),  it.requestedLineValue, it.lineValue, priceDiverges, true)}
             </div>
           </div>
-          ${issue}
+          ${issueBlock}
         </div>
       `;
     }).join('');
 
     document.getElementById('itemListWrap').innerHTML = `
       <div class="item-list-header">
-        <h2 class="item-list-title">Products in this order</h2>
-        <span class="item-list-count">${o.items.length} item${o.items.length === 1 ? '' : 's'}</span>
+        <h2 class="item-list-title">${t('details.products')}</h2>
+        <span class="item-list-count">${o.items.length === 1 ? t('details.itemOne', { count: o.items.length }) : t('details.itemMany', { count: o.items.length })}</span>
       </div>
       <div class="item-list">${itemRows}</div>
     `;
@@ -1675,17 +2218,40 @@
     if (orderMatch) {
       document.getElementById('orderItems').hidden = false;
       renderItemPage(orderMatch[1]);
-    } else if (hash === '#orders') {
-      document.getElementById('orders').hidden = false;
-      view.itemPageOrderId = null;
-      renderTable();
     } else {
-      document.getElementById('home').hidden = false;
-      view.itemPageOrderId = null;
+      closeReprocessModal();
+      closeUpcFixModal();
+      if (hash === '#orders') {
+        document.getElementById('orders').hidden = false;
+        view.itemPageOrderId = null;
+        renderTable();
+      } else {
+        document.getElementById('home').hidden = false;
+        view.itemPageOrderId = null;
+      }
     }
     window.scrollTo(0, 0);
   }
   addEventListener('hashchange', showScreen);
+
+  const reprocessModalEl = document.getElementById('reprocessModal');
+  reprocessModalEl.addEventListener('click', (e) => {
+    if (e.target === reprocessModalEl) closeReprocessModal();
+  });
+  reprocessModalEl.addEventListener('cancel', (e) => {
+    e.preventDefault();
+    closeReprocessModal();
+  });
+
+  const upcFixModalEl = document.getElementById('upcFixModal');
+  upcFixModalEl.addEventListener('click', (e) => {
+    if (e.target === upcFixModalEl) closeUpcFixModal();
+  });
+  upcFixModalEl.addEventListener('cancel', (e) => {
+    e.preventDefault();
+    closeUpcFixModal();
+  });
+
   showScreen();
   </script>
 </body>

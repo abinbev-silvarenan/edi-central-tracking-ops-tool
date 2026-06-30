@@ -18,12 +18,14 @@ window.EDI_DATA = (function () {
   // Retailer chains — ops users see orders across many chains.
   // ----------------------------------------------------------------
   const CHAINS = [
-    { code: 'OXXO',     name: 'OXXO' },
-    { code: 'SORIANA',  name: 'Soriana' },
-    { code: 'WALMART',  name: 'Walmart' },
-    { code: 'CHEDRAUI', name: 'Chedraui' },
-    { code: 'HEB',      name: 'H-E-B' },
-    { code: 'CITY',     name: 'City Market' },
+    { code: 'CENCOSUD',   name: 'CENCOSUD S.A.' },
+    { code: 'COOP_OBR',   name: 'COOP. OBR. LDA. DE CONS. Y V.' },
+    { code: 'EXTRA',      name: 'EXTRA S.A.' },
+    { code: 'COTO',       name: 'COTO C.I.C.S.A..' },
+    { code: 'DORINKA',    name: 'DORINKA SRL' },
+    { code: 'DIA_ARG',    name: 'DIA ARGENTINA S.A.' },
+    { code: 'SUPERMAX',   name: 'SUPERMAX S.A.' },
+    { code: 'INC',        name: 'INC S.A' },
   ];
 
   // Vendors managed by this ops team (single tenant in this prototype).
@@ -37,10 +39,10 @@ window.EDI_DATA = (function () {
   // Sales reps assigned per retailer chain (mock data only — drives the
   // Sales rep filter dimension required by HLR FR-2).
   const SALES_REPS = [
-    { id: 'rep-001', name: 'María González',  chains: ['OXXO', 'SORIANA'] },
-    { id: 'rep-002', name: 'Carlos Rodríguez', chains: ['WALMART', 'CHEDRAUI'] },
-    { id: 'rep-003', name: 'Ana Martínez',    chains: ['HEB', 'CITY'] },
-    { id: 'rep-004', name: 'Juan Hernández',  chains: ['OXXO', 'WALMART'] },
+    { id: 'rep-001', name: 'María González',   chains: ['CENCOSUD', 'COTO'] },
+    { id: 'rep-002', name: 'Carlos Rodríguez', chains: ['EXTRA', 'DIA_ARG'] },
+    { id: 'rep-003', name: 'Ana Martínez',     chains: ['SUPERMAX', 'CENCOSUD'] },
+    { id: 'rep-004', name: 'Juan Hernández',   chains: ['DORINKA', 'INC', 'COOP_OBR'] },
   ];
 
   // Region/zone the POC sits in — used by the Region filter dimension.
@@ -139,7 +141,7 @@ window.EDI_DATA = (function () {
       status: 'BLOCKED',
       scope: 'line',
       action: 'upc-selector',
-      actionLabel: 'Reprocess with selected UPCs',
+      actionLabel: 'Reprocess with resolved UPCs',
       blurb: 'One or more lines reference a UPC that is not in the BEES catalog. Pick the correct UPC for each affected line, then reprocess.',
       orderCopy: 'Some product UPCs in this order were not found in the BEES catalog.',
       bulkAllowed: true,
@@ -217,11 +219,8 @@ window.EDI_DATA = (function () {
   const BLOCKING_RULES = RULES.filter((r) => r.status === 'BLOCKED');
   const REJECTING_RULES = RULES.filter((r) => r.status === 'REJECTED');
 
-  // ----------------------------------------------------------------
-  // Catalog of mock SKUs and a small pool of "alternative UPCs"
-  // surfaced by the UPC selector for the UPC_NOT_FOUND blocking rule.
-  // ----------------------------------------------------------------
-  const CATALOG = [
+  // Catalog of BEES products — base SKUs plus generated variants for a realistic large catalog.
+  const CATALOG_BASE = [
     { sku: '7891000100103', name: 'Corona Extra 355ml — 24-pack',      family: 'Lager',   uom: 'CASE' },
     { sku: '7891000100110', name: 'Stella Artois 330ml — 24-pack',     family: 'Lager',   uom: 'CASE' },
     { sku: '7891000100127', name: 'Budweiser 350ml — 12-pack',         family: 'Lager',   uom: 'CASE' },
@@ -241,6 +240,61 @@ window.EDI_DATA = (function () {
     { sku: '7891000100264', name: 'Quilmes Cristal 340ml — 12-pack',   family: 'Lager',   uom: 'CASE' },
     { sku: '7891000100271', name: 'Patagonia Amber Lager 355ml — 6-pack', family: 'Amber', uom: 'CASE' },
   ];
+
+  const CATALOG_BRANDS = [
+    { name: 'Corona Extra', family: 'Lager' },
+    { name: 'Stella Artois', family: 'Lager' },
+    { name: 'Budweiser', family: 'Lager' },
+    { name: 'Bohemia Pilsen', family: 'Pilsner' },
+    { name: 'Modelo Especial', family: 'Lager' },
+    { name: 'Negra Modelo', family: 'Dark' },
+    { name: 'Pacífico', family: 'Lager' },
+    { name: 'Victoria', family: 'Lager' },
+    { name: 'Hoegaarden', family: 'Wheat' },
+    { name: 'Leffe Blonde', family: 'Abbey' },
+    { name: 'Goose Island IPA', family: 'IPA' },
+    { name: 'Michelob Ultra', family: 'Light' },
+    { name: "Beck's", family: 'Pilsner' },
+    { name: 'Brahma Chopp', family: 'Lager' },
+    { name: 'Skol', family: 'Lager' },
+    { name: 'Antarctica Original', family: 'Lager' },
+    { name: 'Quilmes Cristal', family: 'Lager' },
+    { name: 'Patagonia Amber Lager', family: 'Amber' },
+    { name: 'Andes Origen Rubia', family: 'Lager' },
+    { name: 'Imperial Golden', family: 'Lager' },
+    { name: 'Salta Cautiva', family: 'Lager' },
+    { name: 'Schneider', family: 'Red Lager' },
+    { name: 'Warsteiner', family: 'Pilsner' },
+    { name: 'Franziskaner', family: 'Wheat' },
+  ];
+
+  const CATALOG_VOLUMES_ML = [250, 310, 330, 350, 355, 473, 500, 600, 710];
+  const CATALOG_PACKS = [4, 6, 12, 18, 24];
+
+  function buildCatalog() {
+    const catalog = [...CATALOG_BASE];
+    const seen = new Set(catalog.map((c) => c.sku));
+    let seq = 100300;
+    for (const brand of CATALOG_BRANDS) {
+      for (const vol of CATALOG_VOLUMES_ML) {
+        for (const pack of CATALOG_PACKS) {
+          const sku = `7891${String(seq).padStart(9, '0')}`;
+          seq += 1;
+          if (seen.has(sku)) continue;
+          seen.add(sku);
+          catalog.push({
+            sku,
+            name: `${brand.name} ${vol}ml — ${pack}-pack`,
+            family: brand.family,
+            uom: 'CASE',
+          });
+        }
+      }
+    }
+    return catalog;
+  }
+
+  const CATALOG = buildCatalog();
 
   // ----------------------------------------------------------------
   // Deterministic pseudo-random so every reload renders the same mock.
