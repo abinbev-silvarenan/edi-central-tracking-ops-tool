@@ -993,16 +993,48 @@
     renderTable();
   }
 
+  function renderOrderTableHeader() {
+    return `
+      <div class="order-row order-row--head" role="row">
+        <div class="cell-select cell-select--head" aria-hidden="true"></div>
+        <div class="cell cell-status">${t('table.status')}</div>
+        <div class="cell cell-date">${t('table.receiveDate')}</div>
+        <div class="cell cell-account">${t('table.poc')}</div>
+        <div class="cell cell-rule">${t('table.rule')}</div>
+        <div class="cell cell-po">${t('table.po')}</div>
+        <div class="cell cell-bees">${t('table.bees')}</div>
+        <div class="cell cell-expiration">${t('table.expiration')}</div>
+        <div class="cell cell-actions">${t('table.actions')}</div>
+      </div>
+    `;
+  }
+
+  function renderOrderTableEmptyBody() {
+    return `
+      <div class="order-table-empty" role="status">
+        <div class="hexa-empty">
+          <hexa-illustration name="NoSearchResults"></hexa-illustration>
+          <h3>${escapeHtml(t('empty.title'))}</h3>
+          <p>${escapeHtml(t('empty.body'))}</p>
+          <button type="button" class="hexa-btn hexa-btn--secondary" data-track="cta-empty-clear" onclick="clearFilters()">
+            <span>${escapeHtml(t('empty.clear'))}</span>
+          </button>
+        </div>
+      </div>`;
+  }
+
   function renderTable() {
     renderActiveFilterChips();
     renderSummary();
     const orders = filteredOrders();
     const wrap = document.getElementById('tableWrap');
     if (!orders.length) {
-      wrap.innerHTML = '';
-      const empty = document.getElementById('emptyTpl').content.cloneNode(true);
-      empty.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.getAttribute('data-i18n')); });
-      wrap.appendChild(empty);
+      wrap.innerHTML = `
+        <div class="order-table">
+          <div class="order-list">${renderOrderTableHeader()}${renderOrderTableEmptyBody()}</div>
+        </div>
+        ${renderPagination(0, 0, 0, 1)}
+      `;
       document.getElementById('bulkBar').hidden = true;
       return;
     }
@@ -1066,19 +1098,7 @@
       `;
     }).join('');
 
-    const headerRow = `
-      <div class="order-row order-row--head" role="row">
-        <div class="cell-select cell-select--head" aria-hidden="true"></div>
-        <div class="cell cell-status">${t('table.status')}</div>
-        <div class="cell cell-date">${t('table.receiveDate')}</div>
-        <div class="cell cell-account">${t('table.poc')}</div>
-        <div class="cell cell-rule">${t('table.rule')}</div>
-        <div class="cell cell-po">${t('table.po')}</div>
-        <div class="cell cell-bees">${t('table.bees')}</div>
-        <div class="cell cell-expiration">${t('table.expiration')}</div>
-        <div class="cell cell-actions">${t('table.actions')}</div>
-      </div>
-    `;
+    const headerRow = renderOrderTableHeader();
 
     wrap.innerHTML = `
       <div class="order-table">
@@ -1092,30 +1112,36 @@
 
   function renderPagination(start, end, total, totalPages) {
     const cur = view.page;
-    const set = new Set([1, totalPages, cur, cur - 1, cur + 1]);
+    const isEmpty = total === 0;
+    const rangeMeta = isEmpty
+      ? t('pagination.range', { start: '0', end: '0', total: '0' })
+      : t('pagination.range', { start: (start + 1).toLocaleString(), end: end.toLocaleString(), total: total.toLocaleString() });
+    const set = isEmpty ? [] : new Set([1, totalPages, cur, cur - 1, cur + 1]);
     const pageNums = [...set].filter(n => n >= 1 && n <= totalPages).sort((a, b) => a - b);
     const buttons = [];
     let prev = 0;
     for (const n of pageNums) {
       if (n - prev > 1) buttons.push(`<span class="page-ellipsis">…</span>`);
-      buttons.push(`<button class="page-btn ${n === cur ? 'is-current' : ''}" onclick="goToPage(${n})" data-track="pagination-page" aria-label="${escapeHtml(t('pagination.page', { n }))}">${n}</button>`);
+      buttons.push(`<button class="page-btn ${n === cur ? 'is-current' : ''}" onclick="goToPage(${n})" data-track="pagination-page" aria-label="${escapeHtml(t('pagination.page', { n }))}" ${isEmpty ? 'disabled' : ''}>${n}</button>`);
       prev = n;
     }
+    const navDisabled = isEmpty || cur === 1;
+    const navEndDisabled = isEmpty || cur === totalPages;
     return `
       <div class="pagination">
-        <span class="meta">${t('pagination.range', { start: (start + 1).toLocaleString(), end: end.toLocaleString(), total: total.toLocaleString() })}</span>
+        <span class="meta">${rangeMeta}</span>
         <label class="page-size">
           ${t('pagination.linesPerPage')}
-          <select class="hexa-select" onchange="changePageSize(this.value)">
+          <select class="hexa-select" onchange="changePageSize(this.value)" ${isEmpty ? 'disabled' : ''}>
             ${[10, 25, 50, 100].map(n => `<option value="${n}" ${n === view.pageSize ? 'selected' : ''}>${n}</option>`).join('')}
           </select>
         </label>
         <div class="pages">
-          <button class="page-btn" onclick="goToPage(1)"          ${cur === 1 ? 'disabled' : ''} data-track="pagination-first" aria-label="${escapeHtml(t('pagination.first'))}"><hexa-icon name="ChevronDoubleLeftIcon"></hexa-icon></button>
-          <button class="page-btn" onclick="goToPage(${cur - 1})" ${cur === 1 ? 'disabled' : ''} data-track="pagination-prev"  aria-label="${escapeHtml(t('pagination.prev'))}"><hexa-icon name="ChevronLeftIcon"></hexa-icon></button>
-          ${buttons.join('')}
-          <button class="page-btn" onclick="goToPage(${cur + 1})" ${cur === totalPages ? 'disabled' : ''} data-track="pagination-next" aria-label="${escapeHtml(t('pagination.next'))}"><hexa-icon name="ChevronRightIcon"></hexa-icon></button>
-          <button class="page-btn" onclick="goToPage(${totalPages})" ${cur === totalPages ? 'disabled' : ''} data-track="pagination-last" aria-label="${escapeHtml(t('pagination.last'))}"><hexa-icon name="ChevronDoubleRightIcon"></hexa-icon></button>
+          <button class="page-btn" onclick="goToPage(1)"          ${navDisabled ? 'disabled' : ''} data-track="pagination-first" aria-label="${escapeHtml(t('pagination.first'))}"><hexa-icon name="ChevronDoubleLeftIcon"></hexa-icon></button>
+          <button class="page-btn" onclick="goToPage(${cur - 1})" ${navDisabled ? 'disabled' : ''} data-track="pagination-prev"  aria-label="${escapeHtml(t('pagination.prev'))}"><hexa-icon name="ChevronLeftIcon"></hexa-icon></button>
+          ${isEmpty ? `<button class="page-btn is-current" disabled aria-current="page">1</button>` : buttons.join('')}
+          <button class="page-btn" onclick="goToPage(${cur + 1})" ${navEndDisabled ? 'disabled' : ''} data-track="pagination-next" aria-label="${escapeHtml(t('pagination.next'))}"><hexa-icon name="ChevronRightIcon"></hexa-icon></button>
+          <button class="page-btn" onclick="goToPage(${totalPages})" ${navEndDisabled ? 'disabled' : ''} data-track="pagination-last" aria-label="${escapeHtml(t('pagination.last'))}"><hexa-icon name="ChevronDoubleRightIcon"></hexa-icon></button>
         </div>
       </div>
     `;

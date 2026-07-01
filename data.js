@@ -18,14 +18,10 @@ window.EDI_DATA = (function () {
   // Retailer chains — ops users see orders across many chains.
   // ----------------------------------------------------------------
   const CHAINS = [
-    { code: 'CENCOSUD',   name: 'CENCOSUD S.A.' },
-    { code: 'COOP_OBR',   name: 'COOP. OBR. LDA. DE CONS. Y V.' },
-    { code: 'EXTRA',      name: 'EXTRA S.A.' },
-    { code: 'COTO',       name: 'COTO C.I.C.S.A..' },
-    { code: 'DORINKA',    name: 'DORINKA SRL' },
-    { code: 'DIA_ARG',    name: 'DIA ARGENTINA S.A.' },
-    { code: 'SUPERMAX',   name: 'SUPERMAX S.A.' },
-    { code: 'INC',        name: 'INC S.A' },
+    { code: 'OXXO',    name: 'Oxxo' },
+    { code: 'WALMART', name: 'Walmart' },
+    { code: 'EXTRA',   name: 'Extra' },
+    { code: 'KIOSKO',  name: 'Kiosko' },
   ];
 
   // Vendors managed by this ops team (single tenant in this prototype).
@@ -39,10 +35,10 @@ window.EDI_DATA = (function () {
   // Sales reps assigned per retailer chain (mock data only — drives the
   // Sales rep filter dimension required by HLR FR-2).
   const SALES_REPS = [
-    { id: 'rep-001', name: 'María González',   chains: ['CENCOSUD', 'COTO'] },
-    { id: 'rep-002', name: 'Carlos Rodríguez', chains: ['EXTRA', 'DIA_ARG'] },
-    { id: 'rep-003', name: 'Ana Martínez',     chains: ['SUPERMAX', 'CENCOSUD'] },
-    { id: 'rep-004', name: 'Juan Hernández',   chains: ['DORINKA', 'INC', 'COOP_OBR'] },
+    { id: 'rep-001', name: 'María González',   chains: ['OXXO', 'EXTRA'] },
+    { id: 'rep-002', name: 'Carlos Rodríguez', chains: ['WALMART', 'KIOSKO'] },
+    { id: 'rep-003', name: 'Ana Martínez',     chains: ['OXXO', 'WALMART'] },
+    { id: 'rep-004', name: 'Juan Hernández',   chains: ['EXTRA', 'KIOSKO'] },
   ];
 
   // Region/zone the POC sits in — used by the Region filter dimension.
@@ -54,8 +50,7 @@ window.EDI_DATA = (function () {
     { code: 'PACIF',   name: 'Pacífico' },
   ];
 
-  // ~30 POCs across the chains + regions, enough that the ops user is
-  // managing many retailer points-of-contact at once.
+  // POCs across the four retailer chains and five regions (e.g. Oxxo Monterrey).
   const POCS = (function () {
     const cities = {
       NORTE:   ['Monterrey', 'Saltillo', 'Torreón', 'Chihuahua'],

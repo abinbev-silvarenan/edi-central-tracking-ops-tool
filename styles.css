@@ -609,6 +609,20 @@ body { background: #FAFAFA; }
   width: 100%;
 }
 
+.order-table-empty {
+  border-top: 1px solid var(--hexa-border-default);
+  background: var(--hexa-surface-primary);
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.order-table-empty .hexa-empty {
+  padding: var(--hexa-space-2xl) var(--hexa-space-xl);
+  width: 100%;
+  max-width: 420px;
+}
+
 .order-row {
   display: grid;
   grid-template-columns:
